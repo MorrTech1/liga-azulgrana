@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" />
+  <title>Tabla de Posiciones</title>
+  <link rel="stylesheet" href="style.css" />
+  
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="icon" href="imagenes/liga_azulgrana-Photoroom.png">
+</head>
+<body>
+  
+  <header>
+    <div class="logo-area">
+      <img src="imagenes/liga_azulgrana-Photoroom.png" alt="">
+      <span class="nombre-liga">Centro Deportivo Azulgrana</span>
+    </div>
+
+    <nav class="nav">
+      <ul>
+        <li><a href="#">Inicio</a></li>
+        <li><a href="#tablaGoleo">Goleo</a></li>
+        <li><a href="#partidos">Partidos</a></li>
+      </ul>
+    </nav>
+  </header>
+      
+  <div class="hero-banner">
+    <div class="hero-content">
+      <h1 class="liga">⚽ Centro Deportivo Azulgrana</h1>
+      <button class="header-button"><a href="#calendario">Ver Partidos <i class="fa-solid fa-arrow-down"></i></a></button>
+    </div>
+  </div>
+
+  <div class="container-content">
+
+    <div class="partidos" id="partidos">
+      
+      <h2>📅 Partidos</h2>
+      <div id="calendario"></div>
+      <div id="tabsCategorias" class="tabs-categorias"></div>
+    </div>
+    <h2>Proximos Partidos</h2>
+    <div id="contenedorPendientes"></div>
+
+<h2>✅ Resultados</h2>
+<div id="contenedorJugados"></div>
+
+<h2 class="tabla">🏆 Tabla de Posiciones</h2>
+
+<table id="tabla">
+  <thead>
+    <tr>
+      <th id="1" >#</th>
+      <th id="2">Equipo</th>
+      <th>PJ</th>
+      <th>PG</th>
+      <th>PE</th>
+      <th>PP</th>
+      <th>GF</th>
+      <th>GC</th>
+      <th>DG</th>
+      <th>Pts</th>
+    </tr>
+  </thead>
+  <tbody id="tablaPosiciones"></tbody>
+</table>
+
+<h2>⚽ Tabla de Goleo</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Jugador</th>
+      <th>Equipo</th>
+      <th>Goles</th>
+    </tr>
+  </thead>
+  <tbody id="tablaGoleo"></tbody>
+</table>
+</div>
+
+ <footer>
+    <p>Centro Deportivo Azulgrana &copy; 2024</p>
+    <a href="https://www.facebook.com/profile.php?id=61571745072551&locale=es_LA" target="_blank"> <i class="fa-brands fa-facebook"></i></a>
+ </footer>
+
+
+
+<script src="script.js"></script>
+</body>
+</html>

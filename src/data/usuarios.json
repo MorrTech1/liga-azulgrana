@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "email": "admin@liga.com",
+    "password": "123456",
+    "rol": "admin"
+  },
+  {
+    "id": 2,
+    "email": "user@liga.com",
+    "password": "123456",
+    "rol": "usuario"
+  }
+]

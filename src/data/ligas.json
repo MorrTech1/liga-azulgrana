@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "nombre": "Liga Municipal",
+    "temporada": "2026",
+    "equipos": 8
+  },
+  {
+    "id": 2,
+    "nombre": "Liga Juvenil",
+    "temporada": "2026",
+    "equipos": 12
+  }
+]
