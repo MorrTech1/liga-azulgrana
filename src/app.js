@@ -1,7 +1,20 @@
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 
 const app = express();
+const fs = require('fs');
+
+const uploadsDir = path.join(__dirname, '../public/uploads/equipos');
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const PORT = process.env.PORT || 3000;
+
+// RUTAS DE DIRECTORIOS IMPORTANTES
 
 console.log('APP FILE:', __filename);
 console.log('PUBLIC DIR:', path.join(__dirname, '../public'));
@@ -24,13 +37,6 @@ app.get('/test-upload', (req, res) => {
   );
 });
 
-app.get('/', (req, res) => {
-  res.send('Servidor OK');
-});
-
-app.listen(4000, () => {
-  console.log('Servidor corriendo en http://localhost:4000');
-});
 
 // 👇 IMPORTS DE RUTAS
 const ligasRoutes = require('./routes/ligas.routes');
@@ -61,6 +67,6 @@ app.get('/', (req, res) => {
   res.send('API de Liga de Fútbol funcionando ⚽');
 });
 
-app.listen(3000, () => {
-  console.log('Servidor corriendo en http://localhost:3000');
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
