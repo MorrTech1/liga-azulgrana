@@ -443,9 +443,13 @@ footer {
     font-size: 14px;
    }
 
+   .tabla-container {
+    width: 100%;
+    overflow-x: auto;
+   }
    .hero-banner {
-    height: 50vh;
-    padding-left: 20px;
+    height: 45vh;
+    background-position: top;
    }
     .hero-banner h1 {
       font-size: 26px;
@@ -495,6 +499,6 @@ footer {
    }
    table {
     font-size: 14px;
-    width: 100%;
+    width: 95%;
    }
   }
