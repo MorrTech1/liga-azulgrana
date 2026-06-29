@@ -103,10 +103,7 @@ input, select {
   transition: 0.2s;
 }
 
-input:focus, select:focus {
-  border-color: #2d4aa0;
-  box-shadow: 0 0 0 3px rgba(45,74,160,0.15);
-}
+
 
 
 input {
