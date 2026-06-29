@@ -55,12 +55,12 @@
               <h2>📂 Categorías</h2>
               
               <input id="nombreCategoria" placeholder="Nombre de la categoría">
-              <button onclick="crearCategoria()">Crear categoría</button>
+              <button onclick="crearCategoria()" class="btn-crear">Crear categoría</button>
               
               <br><br>
               
               <select id="categoriaEliminar"></select>
-              <button onclick="eliminarCategoria()">Eliminar categoría</button>
+              <button onclick="eliminarCategoria()" class="btn-eliminar">Eliminar categoría</button>
             </div>
           </div>
         </section>
@@ -78,7 +78,7 @@
 
                    <input type="file" id="logoEquipo" accept="image/*">
                    
-                   <button onclick="crearEquipo()">Crear equipo</button>
+                   <button onclick="crearEquipo()" class="btn-crear">Crear equipo</button>
                    
                    <section>
                      <h2>🗑️ Eliminar Equipo</h2>
@@ -86,7 +86,7 @@
                      <input id="buscarEquipoEliminar" placeholder="Buscar equipo.." type="text">
                      <div id="listaEquipoEliminar" class="lista-buscador"></div>
 
-                     <button onclick="eliminarEquipo()">Eliminar equipo</button>
+                     <button onclick="eliminarEquipo()" class="btn-eliminar">Eliminar equipo</button>
                     </section>
 
 
@@ -103,14 +103,14 @@
                     <!-- Crear jugador -->
                     <input id="nombreJugador" placeholder="Nombre del jugador">
                     <select id="equipoJugador"></select>
-                    <button onclick="crearJugador()">Crear jugador</button>
+                    <button onclick="crearJugador()" class="btn-crear">Crear jugador</button>
                     
                     <hr>
       
                     <!-- Editar jugador -->
                     <select id="jugadorEditar"></select>
         <select id="equipoEditarJugador"></select>
-       <button onclick="editarJugador()">Cambiar equipo</button>
+       <button onclick="editarJugador()" class="btn-editar">Cambiar equipo</button>
       
        <hr>
        
@@ -118,7 +118,7 @@
       <input type=" text" id="buscarJugadorEliminar" placeholder="Buscar Jugador">
       <div id="listaJugadorEliminar" class="lista-buscador"></div>
 
-       <button onclick="eliminarJugador()">Eliminar jugador</button>
+       <button onclick="eliminarJugador()" class="btn-eliminar">Eliminar jugador</button>
       </div>
     </div>
   </section>
@@ -149,7 +149,7 @@
           <input id="hora" type="time">
           <input type="number" id="jornadaPartido" placeholder="Jornada" min="1">
           
-          <button onclick="crearPartido()">Crear partido</button>
+          <button onclick="crearPartido()" class="btn-crear">Crear partido</button>
         </section>
         
         <section>
@@ -179,9 +179,9 @@
           <input type="number" id="golesVisitante" placeholder="Goles visitante">
         
           <div id="goleadoresContainer"></div>
-          <button onclick="agregarGoleador()">➕ Agregar goleador</button>
+          <button onclick="agregarGoleador()" class="btn-crear">➕ Agregar goleador</button>
         
-          <button onclick="registrarResultado()">Registrar resultado</button>
+          <button onclick="registrarResultado()" class="btn-crear">Registrar resultado</button>
         
          </section>
       <!-- ELIMINAR EQUIPO O PARTIDO -->
@@ -189,7 +189,7 @@
          <section>
            <h2>🗑️ Eliminar Partido</h2>   
            
-           <button onclick="eliminarPartido()">Eliminar partido</button>
+           <button onclick="eliminarPartido()" class="btn-eliminar">Eliminar partido</button>
          </section>
       </div>  
     </div>
