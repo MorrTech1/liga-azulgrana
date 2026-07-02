@@ -546,7 +546,7 @@ function cargarJugadores() {
       
       
       jugadores.forEach(j => {
-        const texto = `${j.nombre} ${j.equipoId ? `(${mapaEquipos[j.equipoId]?.nombre || 'Sin equipo'})` : ''}`;
+        const texto = `${j.nombre} — ${j.equipo} (${j.categoria})`;
         
         if (editar) {
           const opt = document.createElement('option');

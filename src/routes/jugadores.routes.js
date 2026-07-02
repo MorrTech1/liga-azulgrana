@@ -1,104 +1,233 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
+const pool = require('../db');
 const { verificarToken, soloAdmin } = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 
-const jugadoresPath = path.join(__dirname, '../data/jugadores.json');
-const equiposPath = path.join(__dirname, '../data/equipos.json');
-
-function leerJSON(ruta) {
-  return JSON.parse(fs.readFileSync(ruta, 'utf-8'));
-}
-
-function guardarJSON(ruta, data) {
-  fs.writeFileSync(ruta, JSON.stringify(data, null, 2));
-}
 
 // ==============================
 // GET jugadores
 // ==============================
-router.get('/', (req, res) => {
-  res.json(leerJSON(jugadoresPath));
-});
+router.get('/', async (req, res) => {
+    try {
 
+        const resultado = await pool.query(`
+            SELECT
+                j.id,
+                j.nombre,
+                j.equipo_id AS "equipoId",
+
+                e.nombre AS equipo,
+
+                c.id AS "categoriaId",
+                c.nombre AS categoria
+
+            FROM jugadores j
+
+            INNER JOIN equipos e
+                ON j.equipo_id = e.id
+
+            INNER JOIN categorias c
+                ON e.categoria_id = c.id
+
+            WHERE j.activo = TRUE
+
+            ORDER BY
+                c.nombre,
+                e.nombre,
+                j.nombre;
+        `);
+
+        res.json(resultado.rows);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            mensaje: "Error obteniendo jugadores."
+        });
+
+    }
+});
 // ==============================
 // POST jugador
 // ==============================
-router.post('/', verificarToken, soloAdmin, (req, res) => {
-  const jugadores = leerJSON(jugadoresPath);
-  const equipos = leerJSON(equiposPath);
+// ==============================
+// POST jugador
+// ==============================
+router.post('/', verificarToken, soloAdmin, async (req, res) => {
+    try {
 
-  const { nombre, equipoId } = req.body;
+        const { nombre, equipoId } = req.body;
 
-  if (!nombre || !equipoId) {
-    return res.status(400).json({ mensaje: 'Datos incompletos' });
-  }
+        if (!nombre || !equipoId) {
+            return res.status(400).json({
+                mensaje: "Datos incompletos"
+            });
+        }
 
-  const equipo = equipos.find(e => e.id === Number(equipoId));
-  if (!equipo) {
-    return res.status(400).json({ mensaje: 'Equipo no válido' });
-  }
+        // Verificar que el equipo exista
+        const equipo = await pool.query(
+            `
+            SELECT id
+            FROM equipos
+            WHERE id = $1
+              AND activo = TRUE;
+            `,
+            [equipoId]
+        );
 
-  const nuevoJugador = {
-    id: jugadores.length ? jugadores[jugadores.length - 1].id + 1 : 1,
-    nombre,
-    equipoId: Number(equipoId),
-    categoriaId: Number(equipo.categoriaId),
-    goles: 0
-  };
+        if (equipo.rows.length === 0) {
+            return res.status(400).json({
+                mensaje: "Equipo no válido"
+            });
+        }
 
-  jugadores.push(nuevoJugador);
-  guardarJSON(jugadoresPath, jugadores);
+        const resultado = await pool.query(
+            `
+            INSERT INTO jugadores (
+                nombre,
+                equipo_id
+            )
+            VALUES ($1, $2)
+            RETURNING
+                id,
+                nombre,
+                equipo_id AS "equipoId";
+            `,
+            [
+                nombre,
+                equipoId
+            ]
+        );
 
-  res.status(201).json(nuevoJugador);
+        res.status(201).json(resultado.rows[0]);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            mensaje: "Error creando jugador."
+        });
+
+    }
 });
 // ==============================
 // PUT jugador (editar equipo)
 // ==============================
-router.put('/:id', verificarToken, soloAdmin, (req, res) => {
-  const id = Number(req.params.id);
-  const { equipoId } = req.body;
+// ==============================
+// PUT jugador (editar equipo)
+// ==============================
+router.put('/:id', verificarToken, soloAdmin, async (req, res) => {
+    try {
 
-  const jugadores = leerJSON(jugadoresPath);
-  const equipos = leerJSON(equiposPath);
+        const id = Number(req.params.id);
+        const { equipoId } = req.body;
 
-  const jugador = jugadores.find(j => j.id === id);
-  if (!jugador) {
-    return res.status(404).json({ mensaje: 'Jugador no encontrado' });
-  }
+        if (!equipoId) {
+            return res.status(400).json({
+                mensaje: "Equipo requerido."
+            });
+        }
 
-  const equipo = equipos.find(e => e.id === Number(equipoId));
-  if (!equipo) {
-    return res.status(400).json({ mensaje: 'Equipo no válido' });
-  }
+        // Verificar que el equipo exista
+        const equipo = await pool.query(
+            `
+            SELECT id
+            FROM equipos
+            WHERE id = $1
+              AND activo = TRUE;
+            `,
+            [equipoId]
+        );
 
-  jugador.equipoId = equipo.id;
-  jugador.categoriaId = equipo.categoriaId;
+        if (equipo.rows.length === 0) {
+            return res.status(400).json({
+                mensaje: "Equipo no válido."
+            });
+        }
 
-  guardarJSON(jugadoresPath, jugadores);
+        const resultado = await pool.query(
+            `
+            UPDATE jugadores
+            SET
+                equipo_id = $1,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $2
+            RETURNING
+                id,
+                nombre,
+                equipo_id AS "equipoId";
+            `,
+            [equipoId, id]
+        );
 
-  res.json({ mensaje: 'Jugador actualizado', jugador });
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({
+                mensaje: "Jugador no encontrado."
+            });
+        }
+
+        res.json({
+            mensaje: "Jugador actualizado correctamente.",
+            jugador: resultado.rows[0]
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            mensaje: "Error actualizando jugador."
+        });
+
+    }
 });
-
 // ==============================
 // DELETE jugador
 // ==============================
-router.delete('/:id', verificarToken, soloAdmin, (req, res) => {
-  const id = Number(req.params.id);
+// ==============================
+// DELETE jugador
+// ==============================
+router.delete('/:id', verificarToken, soloAdmin, async (req, res) => {
+    try {
 
-  const jugadores = leerJSON(jugadoresPath);
-  const index = jugadores.findIndex(j => j.id === id);
+        const id = Number(req.params.id);
 
-  if (index === -1) {
-    return res.status(404).json({ mensaje: 'Jugador no encontrado' });
-  }
+        const resultado = await pool.query(
+            `
+            DELETE FROM jugadores
+            WHERE id = $1
+            RETURNING
+                id,
+                nombre,
+                equipo_id AS "equipoId";
+            `,
+            [id]
+        );
 
-  jugadores.splice(index, 1);
-  guardarJSON(jugadoresPath, jugadores);
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({
+                mensaje: "Jugador no encontrado."
+            });
+        }
 
-  res.json({ mensaje: 'Jugador eliminado' });
+        res.json({
+            mensaje: "Jugador eliminado correctamente.",
+            jugador: resultado.rows[0]
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            mensaje: "Error eliminando jugador."
+        });
+
+    }
 });
 
 module.exports = router;
