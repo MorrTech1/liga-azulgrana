@@ -27,13 +27,15 @@ router.get('/', async (req, res) => {
 
   } catch (error) {
 
-    console.error(error);
+    console.error("ERROR CATEGORIAS:", error);
 
     res.status(500).json({
-      mensaje: "Error obteniendo categorías"
+        mensaje: "Error obteniendo categorías",
+        error: error.message,
+        code: error.code
     });
 
-  }
+}
 });
 
 // ===============================
