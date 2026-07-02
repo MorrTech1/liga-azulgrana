@@ -1,66 +1,123 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
+const pool = require('../db'); 
+
+console.log("🚀 Cargando categorias.routes.js NUEVO");
+
 const { verificarToken, soloAdmin } = require('../middlewares/auth.middleware');
 
 const router = express.Router();
-const filePath = path.join(__dirname, '../data/categorias.json');
+
 
 // helpers
-function leerCategorias() {
-  return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-}
 
-function guardarCategorias(categorias) {
-  fs.writeFileSync(filePath, JSON.stringify(categorias, null, 2));
-}
 
 // ===============================
 // GET /categorias
 // ===============================
-router.get('/', (req, res) => {
-  const categorias = leerCategorias();
-  res.json(categorias);
+router.get('/', async (req, res) => {
+  try {
+
+    const resultado = await pool.query(`
+      SELECT *
+      FROM categorias
+      ORDER BY nombre
+    `);
+
+    res.json(resultado.rows);
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      mensaje: "Error obteniendo categorías"
+    });
+
+  }
 });
 
 // ===============================
 // POST /categorias
 // ===============================
-router.post('/', verificarToken, soloAdmin, (req, res) => {
-  const categorias = leerCategorias();
-  const { nombre } = req.body;
+router.post('/', verificarToken, soloAdmin, async (req, res) => {
+    try {
 
-  if (!nombre) {
-    return res.status(400).json({ mensaje: 'Nombre requerido' });
-  }
+        const { nombre } = req.body;
 
-  const nuevaCategoria = {
-    id: categorias.length ? categorias[categorias.length - 1].id + 1 : 1,
-    nombre
-  };
+        if (!nombre) {
+            return res.status(400).json({
+                mensaje: "Nombre requerido"
+            });
+        }
 
-  categorias.push(nuevaCategoria);
-  guardarCategorias(categorias);
+        // Temporalmente todas pertenecen a la liga 1
+        const ligaId = 1;
 
-  res.status(201).json(nuevaCategoria);
+        const resultado = await pool.query(
+            `
+            INSERT INTO categorias (nombre, liga_id)
+            VALUES ($1, $2)
+            RETURNING *;
+            `,
+            [nombre, ligaId]
+        );
+
+        res.status(201).json(resultado.rows[0]);
+
+    } catch (error) {
+
+        console.error(error);
+
+        // Si ya existe la categoría
+        if (error.code === '23505') {
+            return res.status(400).json({
+                mensaje: "Ya existe una categoría con ese nombre."
+            });
+        }
+
+        res.status(500).json({
+            mensaje: "Error creando categoría."
+        });
+
+    }
 });
 
 // ===============================
 // DELETE /categorias/:id
 // ===============================
-router.delete('/:id', verificarToken, soloAdmin, (req, res) => {
-  const id = Number(req.params.id);
-  const categorias = leerCategorias();
+router.delete('/:id', verificarToken, soloAdmin, async (req, res) => {
+    try {
 
-  const index = categorias.findIndex(c => c.id === id);
-  if (index === -1) {
-    return res.status(404).json({ mensaje: 'Categoría no encontrada' });
-  }
+        const id = Number(req.params.id);
 
-  categorias.splice(index, 1);
-  guardarCategorias(categorias);
+        const resultado = await pool.query(
+            `
+            DELETE FROM categorias
+            WHERE id = $1
+            RETURNING *;
+            `,
+            [id]
+        );
 
-  res.json({ mensaje: 'Categoría eliminada' });
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({
+                mensaje: "Categoría no encontrada."
+            });
+        }
+
+        res.json({
+            mensaje: "Categoría eliminada correctamente."
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            mensaje: "Error eliminando categoría."
+        });
+
+    }
 });
 
 module.exports = router;

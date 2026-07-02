@@ -1,4 +1,6 @@
-require('dotenv').config();
+require("dotenv").config();
+
+console.log(process.env.DATABASE_URL);
 
 const express = require('express');
 const path = require('path');
@@ -17,7 +19,7 @@ const PORT = process.env.PORT || 3000;
 // RUTAS DE DIRECTORIOS IMPORTANTES
 
 console.log('APP FILE:', __filename);
-console.log('PUBLIC DIR:', path.join(__dirname, '../public'));
+console.log('PUBLIC DIR:', path.join(__dirname, '../public')); 
 console.log('UPLOADS DIR:', path.join(__dirname, '../public/uploads'));
 
 app.use(express.json());
@@ -39,6 +41,8 @@ app.get('/test-upload', (req, res) => {
 
 
 // 👇 IMPORTS DE RUTAS
+const pool = require('./db');
+const initDatabase = require('./initDatabase');
 const ligasRoutes = require('./routes/ligas.routes');
 const equiposRoutes = require('./routes/equipos.routes');
 const partidosRoutes = require('./routes/partidos.routes');
@@ -49,7 +53,7 @@ const jugadoresRoutes = require('./routes/jugadores.routes');
 const goleoRoutes = require('./routes/goleo.routes');
 
 
-// 👇 USO DE RUTAS
+//  USO DE RUTAS
 app.use('/ligas', ligasRoutes);
 app.use('/equipos', equiposRoutes);
 app.use('/partidos', partidosRoutes);
@@ -66,6 +70,22 @@ app.use('/goleo', goleoRoutes);
 app.get('/', (req, res) => {
   res.send('API de Liga de Fútbol funcionando ⚽');
 });
+
+async function conectarDB() {
+  try {
+    const resultado = await pool.query("SELECT NOW()");
+    console.log("✅ Conectado a PostgreSQL");
+    console.log(resultado.rows[0]);
+  } catch (error) {
+    console.error("❌ Error al conectar:", error);
+  }
+}
+
+conectarDB();
+
+initDatabase();
+
+
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
