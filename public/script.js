@@ -102,9 +102,13 @@ function cargarCalendario() {
     contJugados.innerHTML = '';
 
     // separar jugados y pendientes
-    const pendientes = partidos.filter(p => !p.jugado);
-    const jugados = partidos.filter(p => p.jugado);
+   const pendientes = partidos.filter(
+    p => p.estado === 'Pendiente'
+);
 
+const jugados = partidos.filter(
+    p => p.estado === 'Finalizado'
+);
     // agrupar por jornada
     const jornadasPendientes = agruparPorJornada(pendientes);
     const jornadasJugados = agruparPorJornada(jugados);
@@ -192,7 +196,6 @@ function formatearFechaHumana(fecha, hora) {
     minute: '2-digit'
   });
 }
-
 
 
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const pool = require('../db');
 
 const router = express.Router();
 
@@ -20,37 +21,68 @@ function leerJSON(ruta) {
 // =======================
 // GET /goleo?categoriaId=
 // =======================
-router.get('/', (req, res) => {
-  const categoriaId = Number(req.query.categoriaId);
+// =======================
+// GET /goleo?categoriaId=
+// =======================
+router.get('/', async (req, res) => {
 
-  if (!categoriaId) {
-    return res.status(400).json({
-      mensaje: 'categoriaId requerido'
-    });
-  }
+    try {
 
-  const jugadores = leerJSON(jugadoresPath)
-    .filter(j => Number(j.categoriaId) === categoriaId);
+        const categoriaId = req.query.categoriaId;
 
-  const equipos = leerJSON(equiposPath);
+        let consulta = `
+            SELECT
+                j.id,
+                j.nombre AS jugador,
+                e.nombre AS equipo,
+                c.nombre AS categoria,
+                SUM(g.cantidad) AS goles
+            FROM goles g
 
-  // Construir tabla de goleo
-  const tabla = jugadores.map(j => {
-    const equipo = equipos.find(e => e.id === j.equipoId);
+            INNER JOIN jugadores j
+                ON g.jugador_id = j.id
 
-    return {
-      jugadorId: j.id,
-      jugador: j.nombre,
-      equipo: equipo ? equipo.nombre : '—',
-      goles: j.goles ?? 0
-    };
-  })
-  // solo mostrar jugadores con goles
-  .filter(j => j.goles > 0)
-  // ordenar por goles
-  .sort((a, b) => b.goles - a.goles);
+            INNER JOIN equipos e
+                ON j.equipo_id = e.id
 
-  res.json(tabla);
+            INNER JOIN categorias c
+                ON e.categoria_id = c.id
+        `;
+
+        const valores = [];
+
+        if (categoriaId) {
+            consulta += `
+                WHERE c.id = $1
+            `;
+            valores.push(categoriaId);
+        }
+
+        consulta += `
+            GROUP BY
+                j.id,
+                j.nombre,
+                e.nombre,
+                c.nombre
+
+            ORDER BY
+                goles DESC,
+                j.nombre ASC;
+        `;
+
+        const resultado = await pool.query(consulta, valores);
+
+        res.json(resultado.rows);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            mensaje: "Error obteniendo tabla de goleo."
+        });
+
+    }
+
 });
-
 module.exports = router;

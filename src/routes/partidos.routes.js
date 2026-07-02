@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const pool = require('../db');
 
 const router = express.Router();
 
@@ -28,174 +29,506 @@ function guardarJSON(ruta, data) {
 // =======================
 // GET /partidos
 // =======================
-router.get('/', (req, res) => {
-  const categoriaId = req.query.categoriaId
-    ? Number(req.query.categoriaId)
-    : null;
+router.get('/', async (req, res) => {
+    try {
 
-  let partidos = leerJSON(partidosPath);
-  const equipos = leerJSON(equiposPath);
+        const categoriaId = req.query.categoriaId
+            ? Number(req.query.categoriaId)
+            : null;
 
-  if (categoriaId) {
-    partidos = partidos.filter(p => p.categoriaId === categoriaId);
-  }
+        let consulta = `
+            SELECT
+                p.id,
+                p.codigo,
+                p.jornada,
 
-  const resultado = partidos.map(p => {
-    const local = equipos.find(e => e.id === p.localId);
-    const visitante = equipos.find(e => e.id === p.visitanteId);
 
-    return {
-      ...p,
-      localNombre: local ? local.nombre : '—',
-      visitanteNombre: visitante ? visitante.nombre : '—',
-      localLogo: local ? local.logo : null,
-      visitanteLogo: visitante ? visitante.logo : null
-    };
-  });
+              TO_CHAR(p.fecha, 'YYYY-MM-DD') AS fecha,
+              TO_CHAR(p.hora, 'HH24:MI') AS hora,
+                p.hora,
 
-  res.json(resultado);
+                p.goles_local AS "golesLocal",
+                p.goles_visitante AS "golesVisitante",
+
+                p.estado,
+
+                p.categoria_id AS "categoriaId",
+
+                p.equipo_local_id AS "localId",
+                local.nombre AS "localNombre",
+                local.escudo AS "localLogo",
+
+                p.equipo_visitante_id AS "visitanteId",
+                visitante.nombre AS "visitanteNombre",
+                visitante.escudo AS "visitanteLogo"
+
+            FROM partidos p
+
+            INNER JOIN equipos local
+                ON p.equipo_local_id = local.id
+
+            INNER JOIN equipos visitante
+                ON p.equipo_visitante_id = visitante.id
+        `;
+
+        const parametros = [];
+
+        if (categoriaId) {
+            consulta += `
+                WHERE p.categoria_id = $1
+            `;
+            parametros.push(categoriaId);
+        }
+
+        consulta += `
+            ORDER BY
+                p.jornada,
+                p.fecha,
+                p.hora
+        `;
+
+        const resultado = await pool.query(
+            consulta,
+            parametros
+        );
+
+        res.json(resultado.rows);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            mensaje: "Error obteniendo partidos."
+        });
+
+    }
 });
 
 // =======================
 // POST /partidos (crear)
 // =======================
-router.post('/', verificarToken, soloAdmin, (req, res) => {
-  const partidos = leerJSON(partidosPath);
-  const equipos = leerJSON(equiposPath);
-  const categorias = leerJSON(categoriasPath);
+router.post('/', verificarToken, soloAdmin, async (req, res) => {
+    try {
 
-  const { localId, visitanteId, fecha, hora, categoriaId, jornada } = req.body;
+        const {
+            localId,
+            visitanteId,
+            fecha,
+            hora,
+            categoriaId,
+            jornada
+        } = req.body;
 
-  if (!localId || !visitanteId || !fecha || !categoriaId || jornada === undefined) {
-    return res.status(400).json({ mensaje: 'Datos incompletos' });
-  }
+        if (
+            !localId ||
+            !visitanteId ||
+            !fecha ||
+            !categoriaId ||
+            jornada === undefined
+        ) {
+            return res.status(400).json({
+                mensaje: "Datos incompletos."
+            });
+        }
 
-  const categoria = categorias.find(c => c.id === Number(categoriaId));
-  if (!categoria) {
-    return res.status(400).json({ mensaje: 'Categoría no válida' });
-  }
+        // No permitir que un equipo juegue contra sí mismo
+        if (Number(localId) === Number(visitanteId)) {
+            return res.status(400).json({
+                mensaje: "Un equipo no puede jugar contra sí mismo."
+            });
+        }
 
-  const local = equipos.find(e => e.id === Number(localId));
-  const visitante = equipos.find(e => e.id === Number(visitanteId));
-  if (!local || !visitante) {
-    return res.status(400).json({ mensaje: 'Equipo no encontrado' });
-  }
+        // Obtener categoría
+        const categoria = await pool.query(
+            `
+            SELECT id, nombre
+            FROM categorias
+            WHERE id = $1
+              AND activa = TRUE;
+            `,
+            [categoriaId]
+        );
 
-  const nuevoId =
-    partidos.length > 0
-      ? Math.max(...partidos.map(p => Number(p.id))) + 1
-      : 1;
+        if (categoria.rows.length === 0) {
+            return res.status(400).json({
+                mensaje: "Categoría no válida."
+            });
+        }
 
-  const codigoCategoria =
-    categoria.codigo || categoria.nombre.slice(0, 4).toUpperCase();
+        // Obtener equipo local
+        const local = await pool.query(
+            `
+            SELECT id, nombre, categoria_id
+            FROM equipos
+            WHERE id = $1
+              AND activo = TRUE;
+            `,
+            [localId]
+        );
 
-  const codigo = `${codigoCategoria}-J${String(jornada).padStart(2, '0')}-${local.nombre.slice(0,3).toUpperCase()}-${visitante.nombre.slice(0,3).toUpperCase()}`;
+        // Obtener equipo visitante
+        const visitante = await pool.query(
+            `
+            SELECT id, nombre, categoria_id
+            FROM equipos
+            WHERE id = $1
+              AND activo = TRUE;
+            `,
+            [visitanteId]
+        );
 
-  const nuevoPartido = {
-    id: nuevoId,
-    codigo,
-    jornada: Number(jornada),
-    localId: Number(localId),
-    visitanteId: Number(visitanteId),
-    fecha,
-    hora,
-    categoriaId: Number(categoriaId),
-    jugado: false
-  };
+        if (
+            local.rows.length === 0 ||
+            visitante.rows.length === 0
+        ) {
+            return res.status(400).json({
+                mensaje: "Equipo no encontrado."
+            });
+        }
 
-  partidos.push(nuevoPartido);
-  guardarJSON(partidosPath, partidos);
+        // Ambos deben pertenecer a la categoría seleccionada
+        if (
+            local.rows[0].categoria_id !== Number(categoriaId) ||
+            visitante.rows[0].categoria_id !== Number(categoriaId)
+        ) {
+            return res.status(400).json({
+                mensaje: "Los equipos no pertenecen a esa categoría."
+            });
+        }
 
-  res.status(201).json(nuevoPartido);
+        // Verificar que no exista ya ese partido
+        const existente = await pool.query(
+            `
+            SELECT id
+            FROM partidos
+            WHERE categoria_id = $1
+              AND jornada = $2
+              AND equipo_local_id = $3
+              AND equipo_visitante_id = $4;
+            `,
+            [
+                categoriaId,
+                jornada,
+                localId,
+                visitanteId
+            ]
+        );
+
+        if (existente.rows.length > 0) {
+            return res.status(400).json({
+                mensaje: "Ese partido ya existe en esa jornada."
+            });
+        }
+
+        // Generar código
+        const codigoCategoria =
+            categoria.rows[0].nombre
+                .slice(0, 4)
+                .toUpperCase();
+
+        const codigo =
+            `${codigoCategoria}-J${String(jornada).padStart(2, '0')}-` +
+            `${local.rows[0].nombre.slice(0,3).toUpperCase()}-` +
+            `${visitante.rows[0].nombre.slice(0,3).toUpperCase()}`;
+
+        // Insertar partido
+        const resultado = await pool.query(
+            `
+            INSERT INTO partidos (
+                codigo,
+                categoria_id,
+                equipo_local_id,
+                equipo_visitante_id,
+                jornada,
+                fecha,
+                hora
+            )
+            VALUES ($1,$2,$3,$4,$5,$6,$7)
+            RETURNING
+                id,
+                codigo,
+                categoria_id AS "categoriaId",
+                equipo_local_id AS "localId",
+                equipo_visitante_id AS "visitanteId",
+                jornada,
+                fecha,
+                hora,
+                goles_local AS "golesLocal",
+                goles_visitante AS "golesVisitante",
+                estado;
+            `,
+            [
+                codigo,
+                categoriaId,
+                localId,
+                visitanteId,
+                jornada,
+                fecha,
+                hora
+            ]
+        );
+
+        res.status(201).json(resultado.rows[0]);
+
+    } catch (error) {
+
+        console.error(error);
+
+        if (error.code === "23505") {
+            return res.status(400).json({
+                mensaje: "Ya existe un partido con ese código."
+            });
+        }
+
+        res.status(500).json({
+            mensaje: "Error creando partido."
+        });
+
+    }
 });
 
 // =======================
 // PUT /partidos/:id (editar)
 // =======================
-router.put('/:id', verificarToken, soloAdmin, (req, res) => {
-  const partidos = leerJSON(partidosPath);
-  const id = Number(req.params.id);
+// =======================
+// PUT /partidos/:id (editar)
+// =======================
+router.put('/:id', verificarToken, soloAdmin, async (req, res) => {
+    try {
 
-  const partido = partidos.find(p => p.id === id);
-  if (!partido) {
-    return res.status(404).json({ mensaje: 'Partido no encontrado' });
-  }
+        const id = Number(req.params.id);
 
-  const { fecha, hora, jornada } = req.body;
+        const {
+            fecha,
+            hora,
+            jornada
+        } = req.body;
 
-  if (fecha) partido.fecha = fecha;
-  if (hora) partido.hora = hora;
-  if (jornada !== undefined) partido.jornada = Number(jornada);
+        const resultado = await pool.query(
+            `
+            UPDATE partidos
+            SET
+                fecha = COALESCE($1, fecha),
+                hora = COALESCE($2, hora),
+                jornada = COALESCE($3, jornada),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $4
+            RETURNING
+                id,
+                codigo,
+                categoria_id AS "categoriaId",
+                equipo_local_id AS "localId",
+                equipo_visitante_id AS "visitanteId",
+                jornada,
+                TO_CHAR(fecha, 'YYYY-MM-DD') AS fecha,
+                TO_CHAR(hora, 'HH24:MI') AS hora,
+                goles_local AS "golesLocal",
+                goles_visitante AS "golesVisitante",
+                estado;
+            `,
+            [
+                fecha || null,
+                hora || null,
+                jornada ?? null,
+                id
+            ]
+        );
 
-  guardarJSON(partidosPath, partidos);
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({
+                mensaje: "Partido no encontrado."
+            });
+        }s
 
-  res.json({ mensaje: 'Partido actualizado' });
+        res.json({
+            mensaje: "Partido actualizado correctamente.",
+            partido: resultado.rows[0]
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            mensaje: "Error actualizando partido."
+        });
+
+    }
 });
-
 // =======================
 // PUT /partidos/:id/resultado
 // =======================
-router.put('/:id/resultado', verificarToken, soloAdmin, (req, res) => {
-  console.log('🔥 ENTRO A REGISTRAR RESULTADO');
-  console.log('BODY COMPLETO', req.body);
+// =======================
+// PUT /partidos/:id/resultado
+// =======================
+router.put('/:id/resultado', verificarToken, soloAdmin, async (req, res) => {
 
+    const client = await pool.connect();
 
-  const partidos = leerJSON(partidosPath);
-  const jugadores = leerJSON(jugadoresPath);
+    try {
 
-  console.log('JUGADORES ANTES:', jugadores);
+        await client.query('BEGIN');
 
-  const partidoId = Number(req.params.id);
-  const { golesLocal, golesVisitante, goleadores } = req.body;
+        const partidoId = Number(req.params.id);
 
-  console.log('GOLEADORES RECIBIDOS:', goleadores);
+        const {
+            golesLocal,
+            golesVisitante,
+            goleadores
+        } = req.body;
 
-  const partido = partidos.find(p => p.id === partidoId);
-  if (!partido) {
-    return res.status(404).json({ mensaje: 'Partido no encontrado' });
-  }
+        // Verificar que el partido exista y aún no esté finalizado
+const partido = await client.query(
+    `
+    SELECT id, estado
+    FROM partidos
+    WHERE id = $1;
+    `,
+    [partidoId]
+);
 
-  if (partido.jugado) {
-    return res.status(400).json({ mensaje: 'Este partido ya fue registrado' });
-  }
+if (partido.rows.length === 0) {
+    throw new Error("Partido no encontrado.");
+}
 
-  partido.golesLocal = Number(golesLocal);
-  partido.golesVisitante = Number(golesVisitante);
-  partido.jugado = true;
-
-  if (Array.isArray(goleadores)) {
-    goleadores.forEach(g => {
-      const jugador = jugadores.find(j => Number(j.id) === Number(g.jugadorId));
-      if (jugador) {
-        jugador.goles = Number(jugador.goles || 0) + Number(g.goles);
-      }
+if (partido.rows[0].estado === 'Finalizado') {
+    return res.status(400).json({
+        mensaje: "Este partido ya fue registrado."
     });
-  }
+}
 
-  console.log('JUGADORES DESPUÉS:', jugadores);
+// Actualizar resultado del partido
+await client.query(
+    `
+    UPDATE partidos
+    SET
+        goles_local = $1,
+        goles_visitante = $2,
+        estado = 'Finalizado',
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = $3;
+    `,
+    [
+        golesLocal,
+        golesVisitante,
+        partidoId
+    ]
+);
 
-  guardarJSON(partidosPath, partidos);
-  guardarJSON(jugadoresPath, jugadores);
+// Eliminar goles previos del partido (por si en el futuro se edita)
+await client.query(
+    `
+    DELETE FROM goles
+    WHERE partido_id = $1;
+    `,
+    [partidoId]
+);
 
-  res.json({ mensaje: 'Resultado registrado correctamente' });
+// Registrar goleadores
+if (Array.isArray(goleadores)) {
+
+    for (const g of goleadores) {
+
+        await client.query(
+            `
+            INSERT INTO goles (
+                partido_id,
+                jugador_id,
+                cantidad
+            )
+            VALUES ($1, $2, $3);
+            `,
+            [
+                partidoId,
+                g.jugadorId,
+                g.goles
+            ]
+        );
+
+    }
+
+}
+
+
+        // Aquí iremos agregando la lógica poco a poco
+
+        await client.query('COMMIT');
+
+        res.json({
+            mensaje: "Resultado registrado correctamente."
+        });
+
+    } catch (error) {
+
+        await client.query('ROLLBACK');
+
+        console.error(error);
+
+        res.status(500).json({
+            mensaje: "Error registrando resultado."
+        });
+
+    } finally {
+
+        client.release();
+
+    }
+
 });
+
+
 
 // =======================
 // DELETE /partidos/:id
 // =======================
-router.delete('/:id', verificarToken, soloAdmin, (req, res) => {
-  const partidos = leerJSON(partidosPath);
-  const id = Number(req.params.id);
 
-  const filtrados = partidos.filter(p => p.id !== id);
 
-  if (filtrados.length === partidos.length) {
-    return res.status(404).json({ mensaje: 'Partido no encontrado' });
-  }
+router.delete('/:id', verificarToken, soloAdmin, async (req, res) => {
+    try {
 
-  guardarJSON(partidosPath, filtrados);
+        const id = Number(req.params.id);
 
-  res.json({ mensaje: 'Partido eliminado' });
+        const resultado = await pool.query(
+            `
+            DELETE FROM partidos
+            WHERE id = $1
+            RETURNING
+                id,
+                codigo,
+                categoria_id AS "categoriaId",
+                equipo_local_id AS "localId",
+                equipo_visitante_id AS "visitanteId",
+                jornada,
+                TO_CHAR(fecha, 'YYYY-MM-DD') AS fecha,
+                TO_CHAR(hora, 'HH24:MI') AS hora,
+                goles_local AS "golesLocal",
+                goles_visitante AS "golesVisitante",
+                estado;
+            `,
+            [id]
+        );
+
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({
+                mensaje: "Partido no encontrado."
+            });
+        }
+
+        res.json({
+            mensaje: "Partido eliminado correctamente.",
+            partido: resultado.rows[0]
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            mensaje: "Error eliminando partido."
+        });
+
+    }
 });
 
 module.exports = router;

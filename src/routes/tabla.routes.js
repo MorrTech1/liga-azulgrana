@@ -1,91 +1,149 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
-
+const pool = require('../db');
 const router = express.Router();
 
-const equiposPath = path.join(__dirname, '../data/equipos.json');
-const partidosPath = path.join(__dirname, '../data/partidos.json');
 
-function leerJSON(ruta) {
-  return JSON.parse(fs.readFileSync(ruta, 'utf-8'));
-}
+router.get('/', async (req, res) => {
 
-router.get('/', (req, res) => {
-  const categoriaId = Number(req.query.categoriaId);
+    try {
 
-  if (!categoriaId) {
-    return res.status(400).json({ mensaje: 'categoriaId requerido' });
-  }
+        const categoriaId = Number(req.query.categoriaId);
 
-  const equipos = leerJSON(equiposPath)
-    .filter(e => Number(e.categoriaId) === categoriaId);
+        if (!categoriaId) {
+            return res.status(400).json({
+                mensaje: 'categoriaId requerido'
+            });
+        }
 
-  const partidos = leerJSON(partidosPath)
-    .filter(p =>
-      Number(p.categoriaId) === categoriaId &&
-      p.jugado === true
-    );
+        // Obtener equipos
+        const equiposResultado = await pool.query(
+            `
+            SELECT
+                id,
+                nombre,
+                escudo AS logo
+            FROM equipos
+            WHERE categoria_id = $1
+              AND activo = TRUE;
+            `,
+            [categoriaId]
+        );
 
-  const tabla = {};
+        // Obtener partidos finalizados
+        const partidosResultado = await pool.query(
+            `
+            SELECT
+                equipo_local_id AS "localId",
+                equipo_visitante_id AS "visitanteId",
+                goles_local AS "golesLocal",
+                goles_visitante AS "golesVisitante"
+            FROM partidos
+            WHERE categoria_id = $1
+              AND estado = 'Finalizado';
+            `,
+            [categoriaId]
+        );
 
-  equipos.forEach(e => {
-    tabla[e.id] = {
-      equipoId: e.id,
-      nombre: e.nombre,
-      logo: e.logo || null,
-      PJ: 0,
-      PG: 0,
-      PE: 0,
-      PP: 0,
-      GF: 0,
-      GC: 0,
-      DG: 0,
-      Pts: 0
-    };
-  });
+        const equipos = equiposResultado.rows;
+        const partidos = partidosResultado.rows;
 
-  partidos.forEach(p => {
-    const local = tabla[p.localId];
-    const visitante = tabla[p.visitanteId];
-    if (!local || !visitante) return;
+        const tabla = {};
 
-    local.PJ++;
-    visitante.PJ++;
+        equipos.forEach(e => {
 
-    local.GF += p.golesLocal;
-    local.GC += p.golesVisitante;
+            tabla[e.id] = {
+                equipoId: e.id,
+                nombre: e.nombre,
+                logo: e.logo,
 
-    visitante.GF += p.golesVisitante;
-    visitante.GC += p.golesLocal;
+                PJ: 0,
+                PG: 0,
+                PE: 0,
+                PP: 0,
 
-    if (p.golesLocal > p.golesVisitante) {
-      local.PG++;
-      visitante.PP++;
-      local.Pts += 3;
-    } else if (p.golesLocal < p.golesVisitante) {
-      visitante.PG++;
-      local.PP++;
-      visitante.Pts += 3;
-    } else {
-      local.PE++;
-      visitante.PE++;
-      local.Pts += 1;
-      visitante.Pts += 1;
-    }
-  });
+                GF: 0,
+                GC: 0,
+                DG: 0,
 
-  Object.values(tabla).forEach(e => {
-    e.DG = e.GF - e.GC;
-  });
+                Pts: 0
+            };
 
-  const resultado = Object.values(tabla).sort((a, b) => {
-    if (b.Pts !== a.Pts) return b.Pts - a.Pts;
-    if (b.DG !== a.DG) return b.DG - a.DG;
+        });
+
+        partidos.forEach(p => {
+
+            const local = tabla[p.localId];
+            const visitante = tabla[p.visitanteId];
+
+            if (!local || !visitante) return;
+
+            local.PJ++;
+            visitante.PJ++;
+
+            local.GF += Number(p.golesLocal);
+            local.GC += Number(p.golesVisitante);
+
+            visitante.GF += Number(p.golesVisitante);
+            visitante.GC += Number(p.golesLocal);
+
+            if (p.golesLocal > p.golesVisitante) {
+
+                local.PG++;
+                visitante.PP++;
+
+                local.Pts += 3;
+
+            } else if (p.golesLocal < p.golesVisitante) {
+
+                visitante.PG++;
+                local.PP++;
+
+                visitante.Pts += 3;
+
+            } else {
+
+                local.PE++;
+                visitante.PE++;
+
+                local.Pts++;
+                visitante.Pts++;
+
+            }
+
+        });
+
+        Object.values(tabla).forEach(e => {
+            e.DG = e.GF - e.GC;
+        });
+
+       const resultado = Object.values(tabla).sort((a, b) => {
+
+    if (b.Pts !== a.Pts)
+        return b.Pts - a.Pts;
+
+    // Priorizar al que ya disputó más partidos
+    if (b.PJ !== a.PJ)
+        return b.PJ - a.PJ;
+
+    if (b.DG !== a.DG)
+        return b.DG - a.DG;
+
     return b.GF - a.GF;
-  });
 
-  res.json(resultado);
+});
+
+        res.json(resultado);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            mensaje: 'Error obteniendo tabla.'
+        });
+
+    }
+
 });
 
 

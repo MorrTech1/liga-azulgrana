@@ -174,13 +174,17 @@ if (existeLiga.rows.length === 0) {
         ON DELETE CASCADE
 ); `)
 
+
+
       // =====================================
       // TABLA PARTIDOS
       // =====================================
 
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS partidos (
+      await pool.query(`
+CREATE TABLE IF NOT EXISTS partidos (
     id SERIAL PRIMARY KEY,
+
+    codigo VARCHAR(50) UNIQUE NOT NULL,
 
     categoria_id INTEGER NOT NULL,
 
@@ -188,11 +192,11 @@ if (existeLiga.rows.length === 0) {
 
     equipo_visitante_id INTEGER NOT NULL,
 
+    jornada INTEGER NOT NULL,
+
     fecha DATE,
 
     hora TIME,
-
-    jornada INTEGER,
 
     goles_local INTEGER DEFAULT 0,
 
@@ -206,13 +210,25 @@ if (existeLiga.rows.length === 0) {
 
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (categoria_id) REFERENCES categorias(id),
+    CONSTRAINT fk_partido_categoria
+        FOREIGN KEY (categoria_id)
+        REFERENCES categorias(id)
+        ON DELETE CASCADE,
 
-    FOREIGN KEY (equipo_local_id) REFERENCES equipos(id),
+    CONSTRAINT fk_partido_local
+        FOREIGN KEY (equipo_local_id)
+        REFERENCES equipos(id)
+        ON DELETE CASCADE,
 
-    FOREIGN KEY (equipo_visitante_id) REFERENCES equipos(id)
+    CONSTRAINT fk_partido_visitante
+        FOREIGN KEY (equipo_visitante_id)
+        REFERENCES equipos(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT equipos_distintos
+        CHECK (equipo_local_id <> equipo_visitante_id)
 );
-            `)
+`);
 
             // =====================================
             // TABLA GOLES
