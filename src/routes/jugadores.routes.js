@@ -5,11 +5,16 @@ const { verificarToken, soloAdmin } = require('../middlewares/auth.middleware');
 const router = express.Router();
 
 
+
+
+
 // ==============================
 // GET jugadores
 // ==============================
-router.get('/', async (req, res) => {
+router.get('/', verificarToken, soloAdmin, async (req, res) => {
     try {
+
+        const ligaId = req.usuario.liga_id;
 
         const resultado = await pool.query(`
             SELECT
@@ -30,13 +35,15 @@ router.get('/', async (req, res) => {
             INNER JOIN categorias c
                 ON e.categoria_id = c.id
 
-            WHERE j.activo = TRUE
+            WHERE
+                j.activo = TRUE
+                AND c.liga_id = $1
 
             ORDER BY
                 c.nombre,
                 e.nombre,
                 j.nombre;
-        `);
+        `, [ligaId]);
 
         res.json(resultado.rows);
 
@@ -50,12 +57,14 @@ router.get('/', async (req, res) => {
 
     }
 });
+
+
 // ==============================
 // POST jugador
 // ==============================
-// ==============================
-// POST jugador
-// ==============================
+
+
+
 router.post('/', verificarToken, soloAdmin, async (req, res) => {
     try {
 
@@ -68,15 +77,31 @@ router.post('/', verificarToken, soloAdmin, async (req, res) => {
         }
 
         // Verificar que el equipo exista
-        const equipo = await pool.query(
-            `
-            SELECT id
-            FROM equipos
-            WHERE id = $1
-              AND activo = TRUE;
-            `,
-            [equipoId]
-        );
+        const ligaId = req.usuario.liga_id;
+
+// Verificar que el equipo pertenezca a la liga del administrador
+const equipo = await pool.query(
+    `
+    SELECT e.id
+    FROM equipos e
+    INNER JOIN categorias c
+        ON e.categoria_id = c.id
+    WHERE
+        e.id = $1
+        AND e.activo = TRUE
+        AND c.liga_id = $2;
+    `,
+    [
+        equipoId,
+        ligaId
+    ]
+);
+
+if (equipo.rows.length === 0) {
+    return res.status(403).json({
+        mensaje: "El equipo no pertenece a tu liga."
+    });
+}
 
         if (equipo.rows.length === 0) {
             return res.status(400).json({
@@ -114,9 +139,10 @@ router.post('/', verificarToken, soloAdmin, async (req, res) => {
 
     }
 });
-// ==============================
-// PUT jugador (editar equipo)
-// ==============================
+
+
+
+
 // ==============================
 // PUT jugador (editar equipo)
 // ==============================
@@ -133,21 +159,31 @@ router.put('/:id', verificarToken, soloAdmin, async (req, res) => {
         }
 
         // Verificar que el equipo exista
-        const equipo = await pool.query(
-            `
-            SELECT id
-            FROM equipos
-            WHERE id = $1
-              AND activo = TRUE;
-            `,
-            [equipoId]
-        );
+       const ligaId = req.usuario.liga_id;
 
-        if (equipo.rows.length === 0) {
-            return res.status(400).json({
-                mensaje: "Equipo no válido."
-            });
-        }
+// Verificar que el equipo pertenezca a la liga del administrador
+const equipo = await pool.query(
+    `
+    SELECT e.id
+    FROM equipos e
+    INNER JOIN categorias c
+        ON e.categoria_id = c.id
+    WHERE
+        e.id = $1
+        AND e.activo = TRUE
+        AND c.liga_id = $2;
+    `,
+    [
+        equipoId,
+        ligaId
+    ]
+);
+
+if (equipo.rows.length === 0) {
+    return res.status(403).json({
+        mensaje: "El equipo no pertenece a tu liga."
+    });
+}
 
         const resultado = await pool.query(
             `
@@ -185,16 +221,40 @@ router.put('/:id', verificarToken, soloAdmin, async (req, res) => {
 
     }
 });
+
+
 // ==============================
 // DELETE jugador
 // ==============================
-// ==============================
-// DELETE jugador
-// ==============================
+
 router.delete('/:id', verificarToken, soloAdmin, async (req, res) => {
     try {
 
         const id = Number(req.params.id);
+        const ligaId = req.usuario.liga_id;
+
+        // Verificar que el jugador pertenezca a la liga del administrador
+        const jugador = await pool.query(
+            `
+            SELECT j.id
+            FROM jugadores j
+            INNER JOIN equipos e
+                ON j.equipo_id = e.id
+            INNER JOIN categorias c
+                ON e.categoria_id = c.id
+            WHERE
+                j.id = $1
+                AND c.liga_id = $2
+                AND j.activo = TRUE;
+            `,
+            [id, ligaId]
+        );
+
+        if (jugador.rows.length === 0) {
+            return res.status(404).json({
+                mensaje: "Jugador no encontrado o no pertenece a tu liga."
+            });
+        }
 
         const resultado = await pool.query(
             `
@@ -207,12 +267,6 @@ router.delete('/:id', verificarToken, soloAdmin, async (req, res) => {
             `,
             [id]
         );
-
-        if (resultado.rows.length === 0) {
-            return res.status(404).json({
-                mensaje: "Jugador no encontrado."
-            });
-        }
 
         res.json({
             mensaje: "Jugador eliminado correctamente.",
@@ -229,5 +283,4 @@ router.delete('/:id', verificarToken, soloAdmin, async (req, res) => {
 
     }
 });
-
 module.exports = router;

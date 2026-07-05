@@ -3,9 +3,11 @@ const pool = require('../db');
 const router = express.Router();
 
 
-router.get('/', async (req, res) => {
+router.get('/',  async (req, res) => {
 
     try {
+
+        const ligaId = req.usuario.liga_id;
 
         const categoriaId = Number(req.query.categoriaId);
 
@@ -18,30 +20,43 @@ router.get('/', async (req, res) => {
         // Obtener equipos
         const equiposResultado = await pool.query(
             `
-            SELECT
-                id,
-                nombre,
-                escudo AS logo
-            FROM equipos
-            WHERE categoria_id = $1
-              AND activo = TRUE;
+           SELECT
+    e.id,
+    e.nombre,
+    e.escudo AS logo
+FROM equipos e
+
+INNER JOIN categorias c
+    ON e.categoria_id = c.id
+
+WHERE
+    e.categoria_id = $1
+    AND c.liga_id = $2
+    AND e.activo = TRUE;
             `,
-            [categoriaId]
+            [categoriaId, ligaId]
         );
 
         // Obtener partidos finalizados
         const partidosResultado = await pool.query(
             `
-            SELECT
-                equipo_local_id AS "localId",
-                equipo_visitante_id AS "visitanteId",
-                goles_local AS "golesLocal",
-                goles_visitante AS "golesVisitante"
-            FROM partidos
-            WHERE categoria_id = $1
-              AND estado = 'Finalizado';
+             SELECT
+    p.equipo_local_id AS "localId",
+    p.equipo_visitante_id AS "visitanteId",
+    p.goles_local AS "golesLocal",
+    p.goles_visitante AS "golesVisitante"
+
+FROM partidos p
+
+INNER JOIN categorias c
+    ON p.categoria_id = c.id
+
+WHERE
+    p.categoria_id = $1
+    AND c.liga_id = $2
+    AND p.estado = 'Finalizado';
             `,
-            [categoriaId]
+            [categoriaId, ligaId]
         );
 
         const equipos = equiposResultado.rows;

@@ -26,11 +26,23 @@ function guardarJSON(ruta, data) {
   fs.writeFileSync(ruta, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+
+
+
 // =======================
 // GET /partidos
 // =======================
-router.get('/', async (req, res) => {
+router.get('/', verificarToken, soloAdmin, async (req, res) => {
     try {
+         
+        const jornada = req.query.jornada
+    ? Number(req.query.jornada)
+    : null;
+
+const jugado = req.query.jugado;
+
+
+        const ligaId = req.usuario.liga_id;
 
         const categoriaId = req.query.categoriaId
             ? Number(req.query.categoriaId)
@@ -42,10 +54,8 @@ router.get('/', async (req, res) => {
                 p.codigo,
                 p.jornada,
 
-
-              TO_CHAR(p.fecha, 'YYYY-MM-DD') AS fecha,
-              TO_CHAR(p.hora, 'HH24:MI') AS hora,
-                p.hora,
+                TO_CHAR(p.fecha, 'YYYY-MM-DD') AS fecha,
+                TO_CHAR(p.hora, 'HH24:MI') AS hora,
 
                 p.goles_local AS "golesLocal",
                 p.goles_visitante AS "golesVisitante",
@@ -64,27 +74,48 @@ router.get('/', async (req, res) => {
 
             FROM partidos p
 
+            INNER JOIN categorias c
+                ON p.categoria_id = c.id
+
             INNER JOIN equipos local
                 ON p.equipo_local_id = local.id
 
             INNER JOIN equipos visitante
                 ON p.equipo_visitante_id = visitante.id
+
+            WHERE c.liga_id = $1
         `;
 
-        const parametros = [];
+        const parametros = [ligaId];
 
-        if (categoriaId) {
-            consulta += `
-                WHERE p.categoria_id = $1
-            `;
-            parametros.push(categoriaId);
-        }
+        let indice = 2;
 
+if (categoriaId) {
+    consulta += ` AND p.categoria_id = $${indice}`;
+    parametros.push(categoriaId);
+    indice++;
+}
+
+if (jornada) {
+    consulta += ` AND p.jornada = $${indice}`;
+    parametros.push(jornada);
+    indice++;
+}
+
+if (jugado === 'false') {
+    consulta += ` AND p.estado = 'Pendiente'`;
+}
+
+if (jugado === 'true') {
+    consulta += ` AND p.estado = 'Jugado'`;
+}
+
+        
         consulta += `
             ORDER BY
                 p.jornada,
                 p.fecha,
-                p.hora
+                p.hora;
         `;
 
         const resultado = await pool.query(
@@ -108,8 +139,12 @@ router.get('/', async (req, res) => {
 // =======================
 // POST /partidos (crear)
 // =======================
+
+
 router.post('/', verificarToken, soloAdmin, async (req, res) => {
     try {
+
+        const ligaId = req.usuario.liga_id;
 
         const {
             localId,
@@ -139,51 +174,78 @@ router.post('/', verificarToken, soloAdmin, async (req, res) => {
             });
         }
 
-        // Obtener categoría
+        // Verificar que la categoría pertenezca a la liga
         const categoria = await pool.query(
             `
-            SELECT id, nombre
+            SELECT
+                id,
+                nombre
             FROM categorias
-            WHERE id = $1
-              AND activa = TRUE;
+            WHERE
+                id = $1
+                AND liga_id = $2
+                AND activa = TRUE;
             `,
-            [categoriaId]
+            [
+                categoriaId,
+                ligaId
+            ]
         );
 
         if (categoria.rows.length === 0) {
-            return res.status(400).json({
-                mensaje: "Categoría no válida."
+            return res.status(403).json({
+                mensaje: "La categoría no pertenece a tu liga."
             });
         }
 
-        // Obtener equipo local
+        // Verificar equipo local
         const local = await pool.query(
             `
-            SELECT id, nombre, categoria_id
-            FROM equipos
-            WHERE id = $1
-              AND activo = TRUE;
+            SELECT
+                e.id,
+                e.nombre,
+                e.categoria_id
+            FROM equipos e
+            INNER JOIN categorias c
+                ON e.categoria_id = c.id
+            WHERE
+                e.id = $1
+                AND e.activo = TRUE
+                AND c.liga_id = $2;
             `,
-            [localId]
+            [
+                localId,
+                ligaId
+            ]
         );
 
-        // Obtener equipo visitante
+        // Verificar equipo visitante
         const visitante = await pool.query(
             `
-            SELECT id, nombre, categoria_id
-            FROM equipos
-            WHERE id = $1
-              AND activo = TRUE;
+            SELECT
+                e.id,
+                e.nombre,
+                e.categoria_id
+            FROM equipos e
+            INNER JOIN categorias c
+                ON e.categoria_id = c.id
+            WHERE
+                e.id = $1
+                AND e.activo = TRUE
+                AND c.liga_id = $2;
             `,
-            [visitanteId]
+            [
+                visitanteId,
+                ligaId
+            ]
         );
 
         if (
             local.rows.length === 0 ||
             visitante.rows.length === 0
         ) {
-            return res.status(400).json({
-                mensaje: "Equipo no encontrado."
+            return res.status(403).json({
+                mensaje: "Uno o ambos equipos no pertenecen a tu liga."
             });
         }
 
@@ -202,10 +264,11 @@ router.post('/', verificarToken, soloAdmin, async (req, res) => {
             `
             SELECT id
             FROM partidos
-            WHERE categoria_id = $1
-              AND jornada = $2
-              AND equipo_local_id = $3
-              AND equipo_visitante_id = $4;
+            WHERE
+                categoria_id = $1
+                AND jornada = $2
+                AND equipo_local_id = $3
+                AND equipo_visitante_id = $4;
             `,
             [
                 categoriaId,
@@ -229,8 +292,8 @@ router.post('/', verificarToken, soloAdmin, async (req, res) => {
 
         const codigo =
             `${codigoCategoria}-J${String(jornada).padStart(2, '0')}-` +
-            `${local.rows[0].nombre.slice(0,3).toUpperCase()}-` +
-            `${visitante.rows[0].nombre.slice(0,3).toUpperCase()}`;
+            `${local.rows[0].nombre.slice(0, 3).toUpperCase()}-` +
+            `${visitante.rows[0].nombre.slice(0, 3).toUpperCase()}`;
 
         // Insertar partido
         const resultado = await pool.query(
@@ -244,7 +307,7 @@ router.post('/', verificarToken, soloAdmin, async (req, res) => {
                 fecha,
                 hora
             )
-            VALUES ($1,$2,$3,$4,$5,$6,$7)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING
                 id,
                 codigo,
@@ -275,7 +338,7 @@ router.post('/', verificarToken, soloAdmin, async (req, res) => {
 
         console.error(error);
 
-        if (error.code === "23505") {
+        if (error.code === '23505') {
             return res.status(400).json({
                 mensaje: "Ya existe un partido con ese código."
             });
@@ -379,17 +442,32 @@ router.put('/:id/resultado', verificarToken, soloAdmin, async (req, res) => {
         } = req.body;
 
         // Verificar que el partido exista y aún no esté finalizado
+const ligaId = req.usuario.liga_id;
+
 const partido = await client.query(
     `
-    SELECT id, estado
-    FROM partidos
-    WHERE id = $1;
+    SELECT
+        p.id,
+        p.estado
+    FROM partidos p
+
+    INNER JOIN categorias c
+        ON p.categoria_id = c.id
+
+    WHERE
+        p.id = $1
+        AND c.liga_id = $2;
     `,
-    [partidoId]
+    [
+        partidoId,
+        ligaId
+    ]
 );
 
 if (partido.rows.length === 0) {
-    throw new Error("Partido no encontrado.");
+    return res.status(404).json({
+        mensaje: "El partido no existe o no pertenece a tu liga."
+    });
 }
 
 if (partido.rows[0].estado === 'Finalizado') {
@@ -448,10 +526,18 @@ if (Array.isArray(goleadores)) {
 
     }
 
-}
+} 
+
+console.log("Resultado registrado correctamente");
+console.log({
+    partidoId,
+    golesLocal,
+    golesVisitante,
+    goleadores
+});
 
 
-        // Aquí iremos agregando la lógica poco a poco
+       
 
         await client.query('COMMIT');
 
@@ -488,6 +574,33 @@ router.delete('/:id', verificarToken, soloAdmin, async (req, res) => {
     try {
 
         const id = Number(req.params.id);
+        const ligaId = req.usuario.liga_id;
+
+        // Verificar que el partido pertenezca a la liga del administrador
+        const partido = await pool.query(
+            `
+            SELECT
+                p.id
+            FROM partidos p
+
+            INNER JOIN categorias c
+                ON p.categoria_id = c.id
+
+            WHERE
+                p.id = $1
+                AND c.liga_id = $2;
+            `,
+            [
+                id,
+                ligaId
+            ]
+        );
+
+        if (partido.rows.length === 0) {
+            return res.status(404).json({
+                mensaje: "El partido no existe o no pertenece a tu liga."
+            });
+        }
 
         const resultado = await pool.query(
             `
@@ -508,12 +621,6 @@ router.delete('/:id', verificarToken, soloAdmin, async (req, res) => {
             `,
             [id]
         );
-
-        if (resultado.rows.length === 0) {
-            return res.status(404).json({
-                mensaje: "Partido no encontrado."
-            });
-        }
 
         res.json({
             mensaje: "Partido eliminado correctamente.",

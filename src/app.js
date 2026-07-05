@@ -51,6 +51,9 @@ const authRoutes = require('./routes/auth.routes');
 const categoriasRoutes = require('./routes/categorias.routes');
 const jugadoresRoutes = require('./routes/jugadores.routes');
 const goleoRoutes = require('./routes/goleo.routes');
+const usuariosRoutes = require('./routes/usuarios.routes');
+
+const dashboardFundadorRoutes = require('./routes/fundador/dashboard.routes');
 
 
 //  USO DE RUTAS
@@ -62,6 +65,9 @@ app.use('/auth', authRoutes);
 app.use('/categorias', categoriasRoutes);
 app.use('/jugadores', jugadoresRoutes);
 app.use('/goleo', goleoRoutes); 
+app.use('/usuarios', usuariosRoutes);
+
+app.use('/fundador/dashboard', dashboardFundadorRoutes);
 
 
 

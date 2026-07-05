@@ -27,7 +27,15 @@ function soloAdmin(req, res, next) {
   next();
 }
 
+function soloFundador(req, res, next) {
+  if (req.usuario.rol !== 'fundador') {
+    return res.status(403).json({ mensaje: 'Acceso solo para fundador' });
+  }
+  next();
+}
+
 module.exports = {
   verificarToken,
-  soloAdmin
+  soloAdmin,
+  soloFundador
 };

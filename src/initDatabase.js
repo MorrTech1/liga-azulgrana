@@ -91,6 +91,44 @@ if (existeLiga.rows.length === 0) {
            ON DELETE SET NULL
 );
         `);
+
+
+        // =====================================
+// USUARIO FUNDADOR INICIAL
+// =====================================
+
+const existeFundador = await pool.query(`
+    SELECT id
+    FROM usuarios
+    WHERE rol = 'Fundador';
+`);
+
+if (existeFundador.rows.length === 0) {
+
+    await pool.query(`
+        INSERT INTO usuarios (
+            nombre,
+            email,
+            password,
+            rol,
+            liga_id
+        )
+        VALUES (
+            $1,
+            $2,
+            $3,
+            $4,
+            NULL
+        );
+    `, [
+        'Fundador',
+        'admin@morrtech.com',
+        '123456',
+        'Fundador'
+    ]);
+
+    console.log("✅ Usuario fundador creado.");
+}
        
         // =====================================
         // TABLA CATEGORIAS

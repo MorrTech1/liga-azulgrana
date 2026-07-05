@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (token) {
     mostrarPanelAdmin();
   } else {
-    mostrarLogin(); // 👈 aquí estaba el fallo
+    mostrarLogin(); 
   }
 });
 
@@ -162,7 +162,9 @@ function crearBuscador(input, lista, data, onSelect) {
 
 async function cargarCategoriasCache() {
   const res = await fetch('/categorias', {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
   });
 
   categoriasCache = await res.json();
@@ -184,7 +186,11 @@ async function cargarCategoriasParaResultado() {
 
 
 function cargarCategorias() {
-  fetch('/categorias')
+  fetch('/categorias',{
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  })
     .then(res => res.json())
     .then(categorias => {
       console.log('Categorías cargadas:', categorias);
@@ -249,7 +255,7 @@ function crearCategoria() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${localStorage.getItem('token')}`
     },
     body: JSON.stringify({ nombre })
   })
@@ -269,7 +275,7 @@ function eliminarCategoria() {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${localStorage.getItem('token')}`
     }
   })
     .then(async res => {
@@ -305,7 +311,7 @@ function crearEquipo() {
   fetch('/equipos', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${localStorage.getItem('token')}`
     },
     body: formData
   })
@@ -374,7 +380,7 @@ async function crearPartido() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${localStorage.getItem('token')}`
       },
       body: JSON.stringify(body)
     });
@@ -409,14 +415,14 @@ async function crearPartido() {
 
 async function cargarJugadoresCache() {
   const res = await fetch('/jugadores', {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
   });
   jugadoresCache = await res.json();
 }
 
 async function cargarEquiposCache() {
   const res = await fetch('/equipos', {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
   });
   equiposCache = await res.json();
 }
@@ -426,7 +432,9 @@ console.log('EQUIPOS CACHE:', equiposCache);
 
 
 function cargarEquipos() {
-  fetch('/equipos')
+  fetch('/equipos', {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  })
     .then(res => res.json())
     .then(equipos => {
       mapaEquipos = {};
@@ -532,7 +540,9 @@ crearBuscador(
 
 
 function cargarJugadores() {
-  fetch('/jugadores')
+  fetch('/jugadores', {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  })
   .then(res => res.json())
   .then(jugadores => {
       const editar = document.getElementById('jugadorEditar');
@@ -628,9 +638,13 @@ async function cargarPartidosParaResultado() {
   if (!categoriaResultadoActual || !jornadaResultadoActual) return;
 
   const res = await fetch(
-    `/partidos?categoriaId=${categoriaResultadoActual}&jornada=${jornadaResultadoActual}&jugado=false`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+  `/partidos?categoriaId=${categoriaResultadoActual}&jornada=${jornadaResultadoActual}&jugado=false`,
+  {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  }
+);
 
   const partidos = await res.json();
   partidosResultadoCache = partidos;
@@ -683,7 +697,7 @@ function eliminarEquipo() {
   fetch(`/equipos/${equipoId}`, {
     method: 'DELETE',
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
       'Content-Type': 'application/json'// 🔥 OBLIGATORIO
     }
   })
@@ -726,7 +740,7 @@ function eliminarEquipo() {
   fetch(`/partidos/${partidoSeleccionado.id}`, {
     method: 'DELETE',
     headers: {
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${localStorage.getItem('token')}`
     }
   })
     .then(res => res.json())
@@ -748,7 +762,7 @@ function eliminarEquipo() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${localStorage.getItem('token')}`
     },
     body: JSON.stringify({ nombre, equipoId })
   })
@@ -770,7 +784,7 @@ function editarJugador() {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${localStorage.getItem('token')}`
     },
     body: JSON.stringify({ equipoId })
   })
@@ -794,7 +808,7 @@ function editarJugador() {
   fetch(`/jugadores/${jugadorId}`, {
     method: 'DELETE',
     headers: {
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${localStorage.getItem('token')}`
     }
   })
   .then(res => res.json())
@@ -836,7 +850,9 @@ function editarJugador() {
 
 
 function cargarJugadoresEnSelect(select) {
-  fetch('/jugadores')
+  fetch('/jugadores', {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  })
   .then(res => res.json())
   .then(jugadores => {
       select.innerHTML = '';
@@ -915,6 +931,8 @@ function mostrarInfoPartido(partido) {
   const fechaEl = document.getElementById('infoFecha');
   const horaEl = document.getElementById('infoHora');
 
+  
+
   if (!partido) {
     info.style.display = 'none';
     return;
@@ -952,7 +970,9 @@ function mostrarInfoPartido(partido) {
 // CARGAR PARTIDOS EN SELECT
 // =======================
 function cargarPartidos() {
-  fetch('/partidos')
+  fetch('/partidos',{
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  })  
     .then(res => res.json())
     .then(partidos => {
       
@@ -1052,7 +1072,7 @@ fetch(`/partidos/${partidoId}/resultado`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
+      Authorization: `Bearer ${localStorage.getItem('token')}`
     },
     body: JSON.stringify({
       golesLocal,
@@ -1098,7 +1118,7 @@ function editarPartido() {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
     },
     body: JSON.stringify({ fecha, hora })
   })
@@ -1163,7 +1183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('buscarLocal').dataset.equipoId = equipo.id;
   }
 );
- //equipo visitante
+ 
 crearBuscador(
   document.getElementById('buscarVisitante'),
   document.getElementById('listaVisitante'),

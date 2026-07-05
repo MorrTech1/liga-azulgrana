@@ -11,17 +11,26 @@ const router = express.Router();
 // helpers
 
 
+
+
+
 // ===============================
 // GET /categorias
 // ===============================
-router.get('/', async (req, res) => {
+router.get('/', verificarToken, soloAdmin, async (req, res) => {
   try {
 
-    const resultado = await pool.query(`
-      SELECT *
-      FROM categorias
-      ORDER BY nombre
-    `);
+    const ligaId = req.usuario.liga_id;
+
+const resultado = await pool.query(
+    `
+    SELECT *
+    FROM categorias
+    WHERE liga_id = $1
+    ORDER BY nombre;
+    `,
+    [ligaId]
+);
 
     res.json(resultado.rows);
 
@@ -52,8 +61,7 @@ router.post('/', verificarToken, soloAdmin, async (req, res) => {
             });
         }
 
-        // Temporalmente todas pertenecen a la liga 1
-        const ligaId = 1;
+        const ligaId = req.usuario.liga_id;
 
         const resultado = await pool.query(
             `
