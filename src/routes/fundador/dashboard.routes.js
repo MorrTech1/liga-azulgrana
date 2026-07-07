@@ -19,76 +19,68 @@ router.get(
 
         try {
 
-            const [
-                ligasActivas,
-                ligasSuspendidas,
-                administradores,
-                capturistas,
-                equipos,
-                jugadores,
-                partidos
-            ] = await Promise.all([
+            // Total ligas
+            const ligas = await pool.query(`
+                SELECT COUNT(*)::int AS total
+                FROM ligas;
+            `);
 
-                pool.query(`
-                    SELECT COUNT(*) AS total
-                    FROM ligas
-                    WHERE activa = TRUE;
-                `),
+            // Ligas activas
+            const activas = await pool.query(`
+                SELECT COUNT(*)::int AS total
+                FROM ligas
+                WHERE activa = TRUE;
+            `);
 
-                pool.query(`
-                    SELECT COUNT(*) AS total
-                    FROM ligas
-                    WHERE activa = FALSE;
-                `),
+            // Ligas suspendidas
+            const suspendidas = await pool.query(`
+                SELECT COUNT(*)::int AS total
+                FROM ligas
+                WHERE activa = FALSE;
+            `);
 
-                pool.query(`
-                    SELECT COUNT(*) AS total
-                    FROM usuarios
-                    WHERE rol = 'admin'
-                      AND activo = TRUE;
-                `),
+            // Administradores
+            const administradores = await pool.query(`
+                SELECT COUNT(*)::int AS total
+                FROM usuarios
+                WHERE rol = 'admin'
+                  AND activo = TRUE;
+            `);
 
-                pool.query(`
-                    SELECT COUNT(*) AS total
-                    FROM usuarios
-                    WHERE rol = 'Capturista'
-                      AND activo = TRUE;
-                `),
+            // Últimas ligas
+            const ultimas = await pool.query(`
+                SELECT
 
-                pool.query(`
-                    SELECT COUNT(*) AS total
-                    FROM equipos
-                    WHERE activo = TRUE;
-                `),
+                    l.id,
 
-                pool.query(`
-                    SELECT COUNT(*) AS total
-                    FROM jugadores
-                    WHERE activo = TRUE;
-                `),
+                    l.nombre,
 
-                pool.query(`
-                    SELECT COUNT(*) AS total
-                    FROM partidos;
-                `)
+                    l.activa,
 
-            ]);
+                    u.nombre AS administrador
+
+                FROM ligas l
+
+                LEFT JOIN usuarios u
+                    ON u.liga_id = l.id
+                   AND u.rol='admin'
+
+                ORDER BY l.id DESC
+
+                LIMIT 5;
+            `);
 
             res.json({
 
-                ligasActivas: Number(ligasActivas.rows[0].total),
+                ligas: ligas.rows[0].total,
 
-                ligasSuspendidas: Number(ligasSuspendidas.rows[0].total),
+                activas: activas.rows[0].total,
 
-                administradores: Number(administradores.rows[0].total),
+                suspendidas: suspendidas.rows[0].total,
 
-                capturistas: Number(capturistas.rows[0].total),
+                administradores: administradores.rows[0].total,
 
-                equipos: Number(equipos.rows[0].total),
-
-                jugadores: Number(jugadores.rows[0].total),
-
-                partidos: Number(partidos.rows[0].total)
+                ultimasLigas: ultimas.rows
 
             });
 
@@ -97,7 +89,9 @@ router.get(
             console.error(error);
 
             res.status(500).json({
-                mensaje: 'Error obteniendo dashboard.'
+
+                mensaje:"Error obteniendo dashboard."
+
             });
 
         }

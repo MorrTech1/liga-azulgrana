@@ -1,85 +1,133 @@
-const token = localStorage.getItem("token");
+// ==========================================
+// MORRTECH
+// Founder Panel
+// ==========================================
 
+// Vista actual
+let vistaActual = "dashboard";
 
+// ================================
+// INICIO
+// ================================
 
+window.onload = () => {
 
+    mostrarDashboard();
 
-function mostrarDashboard(){
+};
 
-    document.getElementById("contenido").innerHTML=`
-        <h2>Dashboard</h2>
-    `;
+// ================================
+// TÍTULOS
+// ================================
+
+function actualizarHeader(titulo, subtitulo) {
+
+    document.getElementById("tituloVista").textContent = titulo;
+
+    document.getElementById("subtituloVista").textContent = subtitulo;
 
 }
 
-function mostrarAdministradores(){
+function limpiarContenido() {
+    document.getElementById("contenido").innerHTML = "";
+}
 
-    document.getElementById("contenido").innerHTML=`
-        <h2>Administradores</h2>
-    `;
+// ================================
+// MENU
+// ================================
+
+function activarMenu(indice) {
+
+    document
+        .querySelectorAll(".menu-item")
+        .forEach(b => b.classList.remove("active"));
+
+    document
+        .querySelectorAll(".menu-item")[indice]
+        .classList.add("active");
 
 }
 
-function cerrarSesion(){
+// ================================
+// DASHBOARD
+// ================================
+
+function mostrarDashboard() {
+
+    vistaActual = "dashboard";
+
+    activarMenu(0);
+
+    actualizarHeader(
+        "Dashboard",
+        "Resumen general del sistema."
+    );
+
+    limpiarContenido();
+
+    renderDashboard();
+
+}
+
+// ================================
+// LIGAS
+// ================================
+
+function mostrarLigas() {
+
+    vistaActual = "ligas";
+
+    activarMenu(1);
+
+    actualizarHeader(
+        "Ligas",
+        "Administra todas las ligas."
+    );
+    
+    limpiarContenido();
+    renderLigas();
+
+}
+
+// ================================
+// ADMINISTRADORES
+// ================================
+
+function mostrarAdministradores() {
+
+    vistaActual = "administradores";
+
+    activarMenu(2);
+
+    actualizarHeader(
+        "Administradores",
+        "Gestiona los administradores."
+    );
+
+    limpiarContenido();
+
+    renderAdministradores();
+
+}
+
+function cargarVista(html) {
+
+    const contenido = document.getElementById("contenido");
+
+    contenido.innerHTML = html;
+
+}
+
+// ================================
+// CERRAR SESION
+// ================================
+
+function cerrarSesion() {
+
+    if (!confirm("¿Cerrar sesión?")) return;
 
     localStorage.removeItem("token");
 
-    window.location.href="/";
-
-}
-
-async function mostrarLigas(){
-
-    console.log(localStorage.getItem("token"));
-
-    const res = await fetch('/fundador/ligas',{
-
-        headers:{
-            Authorization:`Bearer ${localStorage.getItem('token')}`
-        }
-
-    });
-
-    const ligas = await res.json();
-
-    let html=`
-
-        <h2>Ligas</h2>
-
-        <table border="1" cellpadding="8">
-
-        <tr>
-
-            <th>ID</th>
-
-            <th>Nombre</th>
-
-            <th>Estado</th>
-
-        </tr>
-
-    `;
-
-    ligas.forEach(l=>{
-
-        html+=`
-
-            <tr>
-
-                <td>${l.id}</td>
-
-                <td>${l.nombre}</td>
-
-                <td>${l.activa ? 'Activa':'Suspendida'}</td>
-
-            </tr>
-
-        `;
-
-    });
-
-    html+=`</table>`;
-
-    document.getElementById("contenido").innerHTML=html;
+    location.href = "/admin.html";
 
 }

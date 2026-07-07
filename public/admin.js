@@ -14,37 +14,59 @@ if (tokenGuardado) {
 // LOGIN
 // =======================
 function login() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
 
-  fetch('/auth/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ email, password })
-  })
-  .then(res => res.json())
-  .then(data => {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
-    if (!data.token) {
-      alert('Credenciales incorrectas');
-      return;
-    }
+    fetch('/auth/login', {
 
-    localStorage.setItem('token', data.token);
+        method: 'POST',
 
-    if (data.rol === 'Fundador') {
+        headers: {
+            'Content-Type': 'application/json'
+        },
 
-      window.location.href = '/fundador';
+        body: JSON.stringify({
+            email,
+            password
+        })
 
-    } else {
+    })
 
-      mostrarPanelAdmin();
+    .then(res => res.json())
 
-    }
+    .then(data => {
 
-  });
+        if (!data.token) {
+
+            alert(data.mensaje || "Error iniciando sesión.");
+
+            return;
+
+        }
+
+        localStorage.setItem('token', data.token);
+
+        if (data.rol === 'Fundador') {
+
+            window.location.href = '/fundador';
+
+        } else {
+
+            mostrarPanelAdmin();
+
+        }
+
+    })
+
+    .catch(error => {
+
+        console.error(error);
+
+        alert("No fue posible conectar con el servidor.");
+
+    });
+
 }
 
 

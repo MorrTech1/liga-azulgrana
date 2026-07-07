@@ -5,47 +5,177 @@
 
     <meta charset="UTF-8">
 
-    <title>MorrTech Console</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Panel del Fundador</title>
 
     <link rel="stylesheet" href="fundador.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 
 </head>
 
 <body>
 
-<div class="contenedor">
+    <div class="layout">
 
-    <aside>
+        <!-- ========================= -->
+        <!-- SIDEBAR -->
+        <!-- ========================= -->
 
-        <h2>MorrTech</h2>
+        <aside class="sidebar">
 
-        <button onclick="mostrarDashboard()">
-            Dashboard
-        </button>
+            <div class="logo">
 
-        <button onclick="mostrarLigas()">
-            Ligas
-        </button>
+                <div class="logo-icon">
+                    M
+                </div>
 
-        <button onclick="mostrarAdministradores()">
-            Administradores
-        </button>
+                <div>
 
-        <button onclick="cerrarSesion()">
-            Cerrar sesión
-        </button>
+                    <h2>MorrTech</h2>
 
-    </aside>
+                    <span>Founder Panel</span>
 
-    <main id="contenido">
+                </div>
 
-        Bienvenido a MorrTech Console.
+            </div>
 
-    </main>
+            <nav>
 
-</div>
+                <button class="menu-item active"
+                    onclick="mostrarDashboard()">
 
-<script src="fundador.js"></script>
+                    <i class="fa-solid fa-chart-line"></i>
+
+                    Dashboard
+
+                </button>
+
+                <button class="menu-item"
+                    onclick="mostrarligas()">
+
+                    <i class="fa-solid fa-trophy"></i>
+
+                    Ligas
+
+                </button>
+
+                <button class="menu-item"
+                    onclick="mostrarAdministradores()">
+
+                    <i class="fa-solid fa-user-shield"></i>
+
+                    Administradores
+
+                </button>
+
+                <button class="menu-item">
+
+                    <i class="fa-solid fa-gear"></i>
+
+                    Configuración
+
+                </button>
+
+            </nav>
+
+            <div class="sidebar-footer">
+
+                <button class="logout"
+                    onclick="cerrarSesion()">
+
+                    <i class="fa-solid fa-right-from-bracket"></i>
+
+                    Cerrar sesión
+
+                </button>
+
+                <small>
+
+                    MorrTech v1.0
+
+                </small>
+
+            </div>
+
+        </aside>
+
+        <!-- ========================= -->
+        <!-- CONTENIDO -->
+        <!-- ========================= -->
+
+        <main>
+
+            <header class="topbar">
+
+                <div>
+
+                    <h1 id="tituloVista">
+
+                        Dashboard
+
+                    </h1>
+
+                    <p id="subtituloVista">
+
+                        Bienvenido al panel del fundador.
+
+                    </p>
+
+                </div>
+
+                <div class="usuario">
+
+                    <div class="avatar">
+
+                        F
+
+                    </div>
+
+                    <div>
+
+                        <strong>
+
+                            Fundador
+
+                        </strong>
+
+                        <br>
+
+                        <small>
+
+                            MorrTech
+
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+            <section id="contenido">
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="components/card.js"></script>
+    <script src="components/table.js"></script>
+    <script src="components/button.js"></script>
+    <script src="components/modal.js"></script>
+
+    <script src="views/dashboard.js"></script>
+    <script src="views/Ligas.js"></script>
+    <script src="views/administradores.js"></script>
+
+    <script src="fundador.js"></script>
 
 </body>
+
 </html>

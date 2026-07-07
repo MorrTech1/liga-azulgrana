@@ -2,61 +2,82 @@ const pool = require("./db");
 
 async function initDatabase() {
     try {
-        console.log("📦 Verificando estructura de la base de datos...");
 
-        // =====================================
-        // TABLA LIGAS
-        // =====================================
+        
 
-        await pool.query(`
-            CREATE TABLE IF NOT EXISTS ligas (
-                id SERIAL PRIMARY KEY,
+console.log("🗑️ Tabla 'ligas' eliminada.");
 
-                nombre VARCHAR(100) NOT NULL,
+        // =======================
+// TABLA LIGAS
+// =======================
 
-                dominio VARCHAR(255) UNIQUE,
+await pool.query(`
+    CREATE TABLE IF NOT EXISTS ligas (
 
-                logo TEXT,
+        id SERIAL PRIMARY KEY,
 
-                banner TEXT,
+        nombre VARCHAR(100) NOT NULL,
 
-                color_primario VARCHAR(20) DEFAULT '#0D2B5B',
+        dominio VARCHAR(255) UNIQUE NOT NULL,
 
-                color_secundario VARCHAR(20) DEFAULT '#C9A227',
+        logo TEXT,
 
-                telefono VARCHAR(20),
+        banner TEXT,
 
-                email VARCHAR(100),
+        color_primario VARCHAR(20) DEFAULT '#0D2B5B',
 
-                facebook_url TEXT,
+        color_secundario VARCHAR(20) DEFAULT '#C9A227',
 
-                instagram_url TEXT,
+        telefono VARCHAR(20),
 
-                activa BOOLEAN DEFAULT TRUE,
+        email VARCHAR(100),
 
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        facebook_url TEXT,
 
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
+        instagram_url TEXT,
 
-            
-        `);
+        activa BOOLEAN DEFAULT TRUE,
 
-        const existeLiga = await pool.query(`
-SELECT id
-FROM ligas
-WHERE id = 1
+        administrador_id INTEGER,
+
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+    );
+`);
+
+
+// =======================
+// LIGA INICIAL
+// =======================
+
+const existeLiga = await pool.query(`
+    SELECT id
+    FROM ligas
+    LIMIT 1;
 `);
 
 if (existeLiga.rows.length === 0) {
 
     await pool.query(`
-        INSERT INTO ligas(id,nombre,dominio)
-        VALUES(1,'Liga Azulgrana','liga-azulgrana.local');
+        INSERT INTO ligas (
+            nombre,
+            dominio
+        )
+        VALUES (
+            'Liga Azulgrana',
+            'liga-azulgrana.local'
+        );
     `);
 
     console.log("✅ Liga inicial creada.");
+
 }
+
+console.log("✅ Tabla 'ligas' lista.");
+
+        
 
         console.log("✅ Tabla 'ligas' lista.");
 

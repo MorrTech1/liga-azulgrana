@@ -15,28 +15,40 @@ router.post('/login', async (req, res) => {
 
         const { email, password } = req.body;
 
-        const resultado = await pool.query(
-            `
-            SELECT
-                id,
-                nombre,
-                email,
-                password,
-                rol,
-                liga_id
-            FROM usuarios
-            WHERE email = $1
-              AND activo = TRUE;
-            `,
-            [email]
-        );
+       const resultado = await pool.query(
+    `
+    SELECT
 
-        if (resultado.rows.length === 0) {
-            return res.status(401).json({
-                mensaje: 'Credenciales inválidas'
-            });
-        }
+        u.id,
 
+        u.nombre,
+
+        u.email,
+
+        u.password,
+
+        u.rol,
+
+        u.liga_id,
+
+        l.activa AS liga_activa
+
+    FROM usuarios u
+
+    LEFT JOIN ligas l
+        ON u.liga_id = l.id
+
+    WHERE
+
+        u.email = $1
+
+        AND u.activo = TRUE;
+    `,
+    [email]
+);
+
+
+        
         const usuario = resultado.rows[0];
 
         // Más adelante aquí usaremos bcrypt
@@ -45,6 +57,26 @@ router.post('/login', async (req, res) => {
                 mensaje: 'Credenciales inválidas'
             });
         }
+
+        // Si no es fundador y la liga está suspendida
+       if (
+
+    usuario.rol !== 'Fundador'
+
+    &&
+
+    usuario.liga_activa === false
+
+) {
+
+    return res.status(403).json({
+
+        mensaje: 'La liga se encuentra suspendida.'
+
+    });
+
+}
+        
 
         const token = jwt.sign(
             {
