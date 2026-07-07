@@ -28,10 +28,19 @@ function soloAdmin(req, res, next) {
 }
 
 function soloFundador(req, res, next) {
-  if (req.usuario.rol !== 'fundador') {
-    return res.status(403).json({ mensaje: 'Acceso solo para fundador' });
-  }
-  next();
+
+    console.log(req.usuario);
+
+    if (req.usuario.rol !== 'Fundador') {
+
+        return res.status(403).json({
+            mensaje: 'Acceso solo para el fundador.'
+        });
+
+    }
+
+    next();
+
 }
 
 module.exports = {

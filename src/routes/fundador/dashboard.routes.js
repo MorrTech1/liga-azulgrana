@@ -19,8 +19,77 @@ router.get(
 
         try {
 
+            const [
+                ligasActivas,
+                ligasSuspendidas,
+                administradores,
+                capturistas,
+                equipos,
+                jugadores,
+                partidos
+            ] = await Promise.all([
+
+                pool.query(`
+                    SELECT COUNT(*) AS total
+                    FROM ligas
+                    WHERE activa = TRUE;
+                `),
+
+                pool.query(`
+                    SELECT COUNT(*) AS total
+                    FROM ligas
+                    WHERE activa = FALSE;
+                `),
+
+                pool.query(`
+                    SELECT COUNT(*) AS total
+                    FROM usuarios
+                    WHERE rol = 'admin'
+                      AND activo = TRUE;
+                `),
+
+                pool.query(`
+                    SELECT COUNT(*) AS total
+                    FROM usuarios
+                    WHERE rol = 'Capturista'
+                      AND activo = TRUE;
+                `),
+
+                pool.query(`
+                    SELECT COUNT(*) AS total
+                    FROM equipos
+                    WHERE activo = TRUE;
+                `),
+
+                pool.query(`
+                    SELECT COUNT(*) AS total
+                    FROM jugadores
+                    WHERE activo = TRUE;
+                `),
+
+                pool.query(`
+                    SELECT COUNT(*) AS total
+                    FROM partidos;
+                `)
+
+            ]);
+
             res.json({
-                mensaje: 'Panel del fundador funcionando 🚀'
+
+                ligasActivas: Number(ligasActivas.rows[0].total),
+
+                ligasSuspendidas: Number(ligasSuspendidas.rows[0].total),
+
+                administradores: Number(administradores.rows[0].total),
+
+                capturistas: Number(capturistas.rows[0].total),
+
+                equipos: Number(equipos.rows[0].total),
+
+                jugadores: Number(jugadores.rows[0].total),
+
+                partidos: Number(partidos.rows[0].total)
+
             });
 
         } catch (error) {
@@ -28,7 +97,7 @@ router.get(
             console.error(error);
 
             res.status(500).json({
-                mensaje: 'Error.'
+                mensaje: 'Error obteniendo dashboard.'
             });
 
         }

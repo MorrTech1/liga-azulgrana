@@ -54,6 +54,7 @@ const goleoRoutes = require('./routes/goleo.routes');
 const usuariosRoutes = require('./routes/usuarios.routes');
 
 const dashboardFundadorRoutes = require('./routes/fundador/dashboard.routes');
+const fundadorLigasRoutes = require('./routes/fundador/ligas.routes');
 
 
 //  USO DE RUTAS
@@ -68,6 +69,7 @@ app.use('/goleo', goleoRoutes);
 app.use('/usuarios', usuariosRoutes);
 
 app.use('/fundador/dashboard', dashboardFundadorRoutes);
+app.use('/fundador/ligas', fundadorLigasRoutes);
 
 
 
@@ -76,6 +78,13 @@ app.use('/fundador/dashboard', dashboardFundadorRoutes);
 app.get('/', (req, res) => {
   res.send('API de Liga de Fútbol funcionando ⚽');
 });
+
+app.get('/fundador', (req, res) => {
+  res.sendFile(
+    path.join(__dirname, '../public/fundador.html'),
+  );
+
+  });
 
 async function conectarDB() {
   try {

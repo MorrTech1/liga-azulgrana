@@ -19,18 +19,32 @@ function login() {
 
   fetch('/auth/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({ email, password })
   })
-    .then(res => res.json())
-    .then(data => {
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-        mostrarPanelAdmin(); 
-      } else {
-        alert('Credenciales incorrectas');
-      }
-    });
+  .then(res => res.json())
+  .then(data => {
+
+    if (!data.token) {
+      alert('Credenciales incorrectas');
+      return;
+    }
+
+    localStorage.setItem('token', data.token);
+
+    if (data.rol === 'Fundador') {
+
+      window.location.href = '/fundador';
+
+    } else {
+
+      mostrarPanelAdmin();
+
+    }
+
+  });
 }
 
 
