@@ -1,4 +1,4 @@
-function mostrarAdministradores(){
+function renderAdministradores(){
 
     document.getElementById("contenido").innerHTML=`
         <h2>Administradores</h2>

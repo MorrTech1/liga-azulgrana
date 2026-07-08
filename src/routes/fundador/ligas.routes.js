@@ -22,15 +22,26 @@ router.get(
 
             const resultado = await pool.query(`
                SELECT
-    id,
-    nombre,
-    logo,
-    color_primario AS "colorPrimario",
-    color_secundario AS "colorSecundario",
-    activa,
-    created_at AS "createdAt"
-FROM ligas
-ORDER BY nombre;
+
+    l.id,
+
+    l.nombre,
+
+    l.activa,
+
+    u.nombre AS administrador,
+
+    u.email
+
+FROM ligas l
+
+LEFT JOIN usuarios u
+
+ON u.liga_id = l.id
+
+AND u.rol = 'admin'
+
+ORDER BY l.id;
             `);
 
             res.json(resultado.rows);

@@ -440,7 +440,7 @@ async function crearPartido() {
     document.getElementById('jornadaPartido').value = '';
 
     // 🔵 recargar calendario
-    
+    cargarPartidos();
 
   } catch (err) {
     console.error(err);
@@ -750,7 +750,7 @@ function eliminarEquipo() {
       input.dataset.equipoId = '';
       
       // 🔄 refrescar datos
-      cargarEquiposCache();
+      cargarEquipos();
       cargarJugadoresCache();
       
       // 🔄 opcional: limpiar lista visual

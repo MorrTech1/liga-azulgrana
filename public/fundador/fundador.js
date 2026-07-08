@@ -73,19 +73,19 @@ function mostrarDashboard() {
 // LIGAS
 // ================================
 
-function mostrarLigas() {
+function mostrarClientes() {
 
-    vistaActual = "ligas";
+    vistaActual = "clientes";
 
     activarMenu(1);
 
     actualizarHeader(
-        "Ligas",
-        "Administra todas las ligas."
+        "Clientes",
+        "Administra las ligas y sus administradores."
     );
     
     limpiarContenido();
-    renderLigas();
+    renderClientes();
 
 }
 
