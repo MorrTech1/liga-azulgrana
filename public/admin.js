@@ -1229,3 +1229,51 @@ crearBuscador(
   }
 );
 });
+
+async function renderCategorias() {
+
+    await cargarCategoriasCache();
+
+    const contenido = document.getElementById("contenido");
+
+    contenido.innerHTML = `
+
+        <div class="vista-header">
+
+            <h2>Categorías</h2>
+
+            <button
+                class="btn btn-primary"
+                onclick="mostrarFormularioCategoria()">
+
+                + Nueva Categoría
+
+            </button>
+
+        </div>
+
+        <div class="vista-toolbar">
+
+            <input
+                id="buscarCategoria"
+                class="input"
+                placeholder="Buscar categoría..."
+                oninput="filtrarCategorias()">
+
+        </div>
+
+        <div id="tablaCategorias"></div>
+
+    `;
+
+    renderTablaCategorias();
+
+}
+
+function renderTablaCategorias(){
+
+    const contenedor = document.getElementById("tablaCategorias");
+
+    contenedor.innerHTML = "";
+
+}
