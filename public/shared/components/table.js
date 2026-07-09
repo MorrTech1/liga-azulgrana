@@ -1,14 +1,22 @@
-function Table({ headers, rows }) {
+function Table({
+
+    headers,
+
+    rows,
+
+    className=""
+
+}){
 
     return `
 
-        <table>
+        <table class="${className}">
 
             <thead>
 
                 <tr>
 
-                    ${headers.map(h => `<th>${h}</th>`).join("")}
+                    ${headers.map(h=>`<th>${h}</th>`).join("")}
 
                 </tr>
 

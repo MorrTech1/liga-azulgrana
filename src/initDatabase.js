@@ -38,8 +38,6 @@ await pool.query(`
 
         activa BOOLEAN DEFAULT TRUE,
 
-        administrador_id INTEGER,
-
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -202,7 +200,7 @@ if (existeFundador.rows.length === 0) {
     CONSTRAINT fk_equipo_categoria
         FOREIGN KEY (categoria_id)
         REFERENCES categorias(id)
-        ON DELETE CASCADE,
+        ON DELETE RESTRICT,
 
     CONSTRAINT equipo_unico
         UNIQUE(nombre, categoria_id)

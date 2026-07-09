@@ -51,21 +51,39 @@
         
         <main class="admin-contenido">
           
-          <section id="seccionCategorias" class="seccion-admin">
-          <div class="card-admin">
-            <div class="form-row">
-              <h2>📂 Categorías</h2>
-              
-              <input id="nombreCategoria" placeholder="Nombre de la categoría">
-              <button onclick="crearCategoria()" class="btn-crear">Crear categoría</button>
-              
-              <br><br>
-              
-              <select id="categoriaEliminar"></select>
-              <button onclick="eliminarCategoria()" class="btn-eliminar">Eliminar categoría</button>
-            </div>
-          </div>
-        </section>
+<section id="seccionCategorias" class="seccion-admin">
+
+    <div class="">
+
+       <div class="vista-header">
+
+    <h2>📂 Categorías</h2>
+
+</div>
+
+<div class="vista-toolbar">
+
+    <input
+        id="buscarCategoria"
+        class="input-busqueda"
+        placeholder="Buscar categoría..."
+        oninput="filtrarCategorias()">
+
+    <button
+        class="btn-crear"
+        onclick="mostrarFormularioCategoria()">
+
+        + Nueva Categoría
+
+    </button>
+
+</div>
+
+        <div id="tablaCategorias"></div>
+
+    </div>
+
+</section>
         
         <!-- CREAR EQUIPO -->
           <section id="seccionEquipos" class="seccion-admin">
@@ -203,8 +221,15 @@
 </div>
 </div>
 
+<script src="shared/components/card.js"></script>
+<script src="shared/components/table.js"></script>
+<script src="shared/components/toast.js"></script>
+<script src="shared/components/modal.js"></script>
 
 
+
+
+<script src="admin/views/categorias.js"></script>
 <script src="admin.js"></script>
 </body>
 </html>

@@ -183,6 +183,8 @@ function confirmarEstadoLiga(id, activa){
 
     });
 
+    renderClientes();
+
 }
 
 async function cambiarEstadoLiga(id){
@@ -202,7 +204,7 @@ async function cambiarEstadoLiga(id){
 
     mostrarToast("Estado de la liga actualizado.");
 
-    mostrarligas();
+    renderClientes();
 
 }
 
@@ -310,7 +312,7 @@ async function guardarEdicionLiga(id){
 
     mostrarToast("Liga actualizada correctamente.");
      
-    mostrarligas();
+    renderClientes();
 
 }
 
@@ -456,7 +458,7 @@ async function crearLigaModal() {
 
     mostrarToast("Liga creada correctamente.");
 
-    mostrarligas();
+    renderClientes();
 
 }
 

@@ -96,9 +96,31 @@ router.post('/', verificarToken, soloAdmin, async (req, res) => {
 // DELETE /categorias/:id
 // ===============================
 router.delete('/:id', verificarToken, soloAdmin, async (req, res) => {
+
     try {
 
         const id = Number(req.params.id);
+
+        // Verificar si existen equipos en la categoría
+        const equipos = await pool.query(
+            `
+            SELECT id
+            FROM equipos
+            WHERE categoria_id = $1
+            LIMIT 1;
+            `,
+            [id]
+        );
+
+        if (equipos.rows.length > 0) {
+
+            return res.status(400).json({
+
+                mensaje: "No puedes eliminar una categoría que tiene equipos registrados."
+
+            });
+
+        }
 
         const resultado = await pool.query(
             `
@@ -110,13 +132,19 @@ router.delete('/:id', verificarToken, soloAdmin, async (req, res) => {
         );
 
         if (resultado.rows.length === 0) {
+
             return res.status(404).json({
+
                 mensaje: "Categoría no encontrada."
+
             });
+
         }
 
         res.json({
+
             mensaje: "Categoría eliminada correctamente."
+
         });
 
     } catch (error) {
@@ -124,10 +152,13 @@ router.delete('/:id', verificarToken, soloAdmin, async (req, res) => {
         console.error(error);
 
         res.status(500).json({
+
             mensaje: "Error eliminando categoría."
+
         });
 
     }
+
 });
 
 module.exports = router;

@@ -118,17 +118,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function mostrarSeccion(nombre) {
 
-  document.querySelectorAll('.seccion-admin')
-    .forEach(sec => sec.style.display = 'none');
+    document.querySelectorAll('.seccion-admin')
+        .forEach(sec => sec.style.display = 'none');
 
-  document
-    .getElementById(`seccion${nombre}`).style.display = 'block';
-    
-  // cerrar sidebar en móvil
-  const sidebar = document.getElementById('adminSidebar');
-  if (window.innerWidth < 768) {
-    sidebar.classList.remove('activa');
-  }
+    document
+        .getElementById(`seccion${nombre}`).style.display = 'block';
+
+    if (nombre === "Categorias") {
+
+        renderCategorias();
+
+    }
+
+    // cerrar sidebar en móvil
+    const sidebar = document.getElementById('adminSidebar');
+
+    if (window.innerWidth < 768) {
+
+        sidebar.classList.remove('activa');
+
+    }
+
 }
 
 function toggleSidebar() {
@@ -196,132 +206,6 @@ function crearBuscador(input, lista, data, onSelect) {
 
 
 
-async function cargarCategoriasCache() {
-  const res = await fetch('/categorias', {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    }
-  });
-
-  categoriasCache = await res.json();
-}
-
-async function cargarCategoriasParaResultado() {
-  const select = document.getElementById('categoriaResultado');
-  if (!select) return;
-
-  select.innerHTML = '<option value="">-- Selecciona una categoría --</option>';
-
-  categoriasCache.forEach(cat => {
-    const option = document.createElement('option');
-    option.value = cat.id;
-    option.textContent = cat.nombre;
-    select.appendChild(option);
-  });
-}
-
-
-function cargarCategorias() {
-  fetch('/categorias',{
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    }
-  })
-    .then(res => res.json())
-    .then(categorias => {
-      console.log('Categorías cargadas:', categorias);
-
-      // ===== Crear equipo =====
-      const categoriaEquipo = document.getElementById('categoriaEquipo');
-      if (categoriaEquipo) {
-        categoriaEquipo.innerHTML = '';
-        categorias.forEach(c => {
-          const opt = document.createElement('option');
-          opt.value = c.id;
-          opt.textContent = c.nombre;
-          categoriaEquipo.appendChild(opt);
-        });
-      }
-
-      // ===== Crear partido =====
-      const categoriaPartido = document.getElementById('categoriaPartido');
-      if (categoriaPartido) {
-        categoriaPartido.innerHTML = '';
-        categorias.forEach(c => {
-          const opt = document.createElement('option');
-          opt.value = c.id;
-          opt.textContent = c.nombre;
-          categoriaPartido.appendChild(opt);
-        });
-      }
-
-      // ===== Eliminar categoría =====
-      const categoriaEliminar = document.getElementById('categoriaEliminar');
-      if (categoriaEliminar) {
-        categoriaEliminar.innerHTML = '';
-
-        if (categorias.length === 0) {
-          const opt = document.createElement('option');
-          opt.textContent = 'No hay categorías';
-          categoriaEliminar.appendChild(opt);
-          return;
-        }
-
-        categorias.forEach(c => {
-          const opt = document.createElement('option');
-          opt.value = c.id;
-          opt.textContent = c.nombre;
-          categoriaEliminar.appendChild(opt);
-        });
-      }
-    })
-    .catch(err => {
-      console.error('Error cargando categorías:', err);
-    });
-}
-
-
-
-
-
-function crearCategoria() {
-  const nombre = document.getElementById('nombreCategoria').value;
-
-  fetch('/categorias', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    },
-    body: JSON.stringify({ nombre })
-  })
-    .then(async res => {
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.mensaje);
-      alert('Categoría creada');
-      cargarCategorias();
-    })
-    .catch(err => alert(err.message));
-}
-
-function eliminarCategoria() {
-  const id = document.getElementById('categoriaEliminar').value;
-
-  fetch(`/categorias/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    }
-  })
-    .then(async res => {
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.mensaje);
-      alert('Categoría eliminada');
-      cargarCategorias();
-    })
-    .catch(err => alert(err.message));
-}
 
 
 // =======================
@@ -577,39 +461,45 @@ crearBuscador(
 
 function cargarJugadores() {
   fetch('/jugadores', {
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
   })
   .then(res => res.json())
   .then(jugadores => {
+
       const editar = document.getElementById('jugadorEditar');
       const eliminar = document.getElementById('jugadorEliminar');
-      const nombreEquipo = mapaEquipos[jugadores.equipoId] || 'Sin equipo';
-      
 
       if (editar) editar.innerHTML = '';
       if (eliminar) eliminar.innerHTML = '';
-      
-      
-      
+
       jugadores.forEach(j => {
+
         const texto = `${j.nombre} — ${j.equipo} (${j.categoria})`;
-        
+
         if (editar) {
+
           const opt = document.createElement('option');
           opt.value = j.id;
           opt.textContent = texto;
           editar.appendChild(opt);
+
         }
-        
+
         if (eliminar) {
+
           const opt = document.createElement('option');
           opt.value = j.id;
           opt.textContent = texto;
           eliminar.appendChild(opt);
+
         }
+
       });
-    });
-  }
+
+  });
+}
 
   crearBuscador(
     document.getElementById('buscarJugadorEliminar'),
@@ -1230,50 +1120,3 @@ crearBuscador(
 );
 });
 
-async function renderCategorias() {
-
-    await cargarCategoriasCache();
-
-    const contenido = document.getElementById("contenido");
-
-    contenido.innerHTML = `
-
-        <div class="vista-header">
-
-            <h2>Categorías</h2>
-
-            <button
-                class="btn btn-primary"
-                onclick="mostrarFormularioCategoria()">
-
-                + Nueva Categoría
-
-            </button>
-
-        </div>
-
-        <div class="vista-toolbar">
-
-            <input
-                id="buscarCategoria"
-                class="input"
-                placeholder="Buscar categoría..."
-                oninput="filtrarCategorias()">
-
-        </div>
-
-        <div id="tablaCategorias"></div>
-
-    `;
-
-    renderTablaCategorias();
-
-}
-
-function renderTablaCategorias(){
-
-    const contenedor = document.getElementById("tablaCategorias");
-
-    contenedor.innerHTML = "";
-
-}
