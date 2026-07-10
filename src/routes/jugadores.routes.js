@@ -12,14 +12,17 @@ const router = express.Router();
 // GET jugadores
 // ==============================
 router.get('/', verificarToken, soloAdmin, async (req, res) => {
+
     try {
 
         const ligaId = req.usuario.liga_id;
 
         const resultado = await pool.query(`
             SELECT
+
                 j.id,
                 j.nombre,
+                j.numero,
                 j.equipo_id AS "equipoId",
 
                 e.nombre AS equipo,
@@ -36,13 +39,17 @@ router.get('/', verificarToken, soloAdmin, async (req, res) => {
                 ON e.categoria_id = c.id
 
             WHERE
+
                 j.activo = TRUE
                 AND c.liga_id = $1
 
             ORDER BY
+
                 c.nombre,
                 e.nombre,
+                j.numero,
                 j.nombre;
+
         `, [ligaId]);
 
         res.json(resultado.rows);
@@ -56,6 +63,7 @@ router.get('/', verificarToken, soloAdmin, async (req, res) => {
         });
 
     }
+
 });
 
 
@@ -63,66 +71,65 @@ router.get('/', verificarToken, soloAdmin, async (req, res) => {
 // POST jugador
 // ==============================
 
-
-
 router.post('/', verificarToken, soloAdmin, async (req, res) => {
+
     try {
 
-        const { nombre, equipoId } = req.body;
+        const { nombre, numero, equipoId } = req.body;
 
-        if (!nombre || !equipoId) {
+        if (!nombre || !equipoId || !numero) {
             return res.status(400).json({
                 mensaje: "Datos incompletos"
             });
         }
 
-        // Verificar que el equipo exista
         const ligaId = req.usuario.liga_id;
 
-// Verificar que el equipo pertenezca a la liga del administrador
-const equipo = await pool.query(
-    `
-    SELECT e.id
-    FROM equipos e
-    INNER JOIN categorias c
-        ON e.categoria_id = c.id
-    WHERE
-        e.id = $1
-        AND e.activo = TRUE
-        AND c.liga_id = $2;
-    `,
-    [
-        equipoId,
-        ligaId
-    ]
-);
-
-if (equipo.rows.length === 0) {
-    return res.status(403).json({
-        mensaje: "El equipo no pertenece a tu liga."
-    });
-}
+        const equipo = await pool.query(
+            `
+            SELECT e.id
+            FROM equipos e
+            INNER JOIN categorias c
+                ON e.categoria_id = c.id
+            WHERE
+                e.id = $1
+                AND e.activo = TRUE
+                AND c.liga_id = $2;
+            `,
+            [
+                equipoId,
+                ligaId
+            ]
+        );
 
         if (equipo.rows.length === 0) {
-            return res.status(400).json({
-                mensaje: "Equipo no válido"
+            return res.status(403).json({
+                mensaje: "El equipo no pertenece a tu liga."
             });
         }
 
         const resultado = await pool.query(
             `
             INSERT INTO jugadores (
+
                 nombre,
+                numero,
                 equipo_id
+
             )
-            VALUES ($1, $2)
+
+            VALUES ($1,$2,$3)
+
             RETURNING
+
                 id,
                 nombre,
+                numero,
                 equipo_id AS "equipoId";
             `,
             [
                 nombre,
+                numero,
                 equipoId
             ]
         );
@@ -138,6 +145,7 @@ if (equipo.rows.length === 0) {
         });
 
     }
+
 });
 
 
@@ -150,54 +158,62 @@ router.put('/:id', verificarToken, soloAdmin, async (req, res) => {
     try {
 
         const id = Number(req.params.id);
-        const { equipoId } = req.body;
 
-        if (!equipoId) {
+        const { nombre, numero, equipoId } = req.body;
+
+        if (!nombre || !numero || !equipoId) {
             return res.status(400).json({
-                mensaje: "Equipo requerido."
+                mensaje: "Datos incompletos."
             });
         }
 
-        // Verificar que el equipo exista
-       const ligaId = req.usuario.liga_id;
+        const ligaId = req.usuario.liga_id;
 
-// Verificar que el equipo pertenezca a la liga del administrador
-const equipo = await pool.query(
-    `
-    SELECT e.id
-    FROM equipos e
-    INNER JOIN categorias c
-        ON e.categoria_id = c.id
-    WHERE
-        e.id = $1
-        AND e.activo = TRUE
-        AND c.liga_id = $2;
-    `,
-    [
-        equipoId,
-        ligaId
-    ]
-);
+        // Verificar que el equipo pertenezca a la liga
+        const equipo = await pool.query(
+            `
+            SELECT e.id
+            FROM equipos e
+            INNER JOIN categorias c
+                ON e.categoria_id = c.id
+            WHERE
+                e.id = $1
+                AND e.activo = TRUE
+                AND c.liga_id = $2;
+            `,
+            [
+                equipoId,
+                ligaId
+            ]
+        );
 
-if (equipo.rows.length === 0) {
-    return res.status(403).json({
-        mensaje: "El equipo no pertenece a tu liga."
-    });
-}
+        if (equipo.rows.length === 0) {
+            return res.status(403).json({
+                mensaje: "El equipo no pertenece a tu liga."
+            });
+        }
 
         const resultado = await pool.query(
             `
             UPDATE jugadores
             SET
-                equipo_id = $1,
+                nombre = $1,
+                numero = $2,
+                equipo_id = $3,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = $2
+            WHERE id = $4
             RETURNING
                 id,
                 nombre,
+                numero,
                 equipo_id AS "equipoId";
             `,
-            [equipoId, id]
+            [
+                nombre,
+                numero,
+                equipoId,
+                id
+            ]
         );
 
         if (resultado.rows.length === 0) {

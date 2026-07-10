@@ -116,6 +116,8 @@ async function cargarCategoriasCache() {
   });
 
   categoriasCache = await res.json();
+
+  renderCategorias();
 }
 
 async function cargarCategoriasParaResultado() {

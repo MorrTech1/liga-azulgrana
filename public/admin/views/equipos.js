@@ -488,7 +488,7 @@ function confirmarEliminarEquipo(id){
 
         contenido:`
 
-            <p>
+            <p style="margin-top:10px;color:#777">
 
                 ¿Seguro que deseas eliminar el equipo
                 <b>${equipo.nombre}</b>?

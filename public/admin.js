@@ -152,16 +152,6 @@ function toggleSidebar() {
 }
 
 
-
-// =======================
-// CREAR EQUIPO
-// =======================
-
-
-
-
-
-
 // =======================
 // CREAR PARTIDO
 // =======================
@@ -228,12 +218,7 @@ async function crearPartido() {
 }
 
 
-async function cargarJugadoresCache() {
-  const res = await fetch('/jugadores', {
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-  });
-  jugadoresCache = await res.json();
-}
+
 
 async function cargarEquiposCache() {
   const res = await fetch('/equipos', {
@@ -241,131 +226,6 @@ async function cargarEquiposCache() {
   });
   equiposCache = await res.json();
 }
-
-console.log('JUGADORES CACHE:', jugadoresCache);
-console.log('EQUIPOS CACHE:', equiposCache);
-
-
-function cargarEquipos() {
-  fetch('/equipos', {
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-  })
-    .then(res => res.json())
-    .then(equipos => {
-      mapaEquipos = {};
-      equipos.forEach(e => {
-        mapaEquipos[e.id] = e;
-      });
-
-      // ===== selects existentes =====
-      const selectLocal = document.getElementById('equipoLocal');
-      const selectVisitante = document.getElementById('equipoVisitante');
-      const selectEliminarEquipo = document.getElementById('equipoEliminar');
-
-      // ===== nuevos selects (jugadores) =====
-      const selectEquipoJugador = document.getElementById('equipoJugador');
-      const selectEquipoEditarJugador = document.getElementById('equipoEditarJugador');
-      
-      // limpiar todos si existend
-      [
-        selectLocal,
-        selectVisitante,
-        selectEliminarEquipo,
-        selectEquipoJugador,
-        selectEquipoEditarJugador
-      ].forEach(s => {
-        if (s) s.innerHTML = '';
-      });
-
-      equipos.forEach(e => {
-        // crear partido
-        if (selectLocal) {
-          const opt = document.createElement('option');
-          opt.value = e.id;
-          opt.textContent = e.nombre;
-          selectLocal.appendChild(opt);
-        }
-
-        if (selectVisitante) {
-          const opt = document.createElement('option');
-          opt.value = e.id;
-          opt.textContent = e.nombre;
-          selectVisitante.appendChild(opt);
-        }
-
-        // eliminar equipo
-        if (selectEliminarEquipo) {
-          const opt = document.createElement('option');
-          opt.value = e.id;
-          opt.textContent = e.nombre;
-          selectEliminarEquipo.appendChild(opt);
-        }
-
-        // crear jugador
-        if (selectEquipoJugador) {
-          const opt = document.createElement('option');
-          opt.value = e.id;
-          opt.textContent = e.nombre;
-          selectEquipoJugador.appendChild(opt);
-        }
-        
-        // editar jugador
-        if (selectEquipoEditarJugador) {
-          const opt = document.createElement('option');
-          opt.value = e.id;
-          opt.textContent = e.nombre;
-          selectEquipoEditarJugador.appendChild(opt);
-        }
-      });
-
-      console.log('✅ Equipos cargados en TODOS los selects');
-    });
-  }
-
-
-function cargarJugadores() {
-  fetch('/jugadores', {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    }
-  })
-  .then(res => res.json())
-  .then(jugadores => {
-
-      const editar = document.getElementById('jugadorEditar');
-      const eliminar = document.getElementById('jugadorEliminar');
-
-      if (editar) editar.innerHTML = '';
-      if (eliminar) eliminar.innerHTML = '';
-
-      jugadores.forEach(j => {
-
-        const texto = `${j.nombre} — ${j.equipo} (${j.categoria})`;
-
-        if (editar) {
-
-          const opt = document.createElement('option');
-          opt.value = j.id;
-          opt.textContent = texto;
-          editar.appendChild(opt);
-
-        }
-
-        if (eliminar) {
-
-          const opt = document.createElement('option');
-          opt.value = j.id;
-          opt.textContent = texto;
-          eliminar.appendChild(opt);
-
-        }
-
-      });
-
-  });
-}
-
-
 
 
 
@@ -448,11 +308,6 @@ async function cargarPartidosParaResultado() {
 
   select.disabled = false;
 }
-
-
-
-
-
   
   
   function eliminarPartido() {
@@ -480,72 +335,7 @@ async function cargarPartidosParaResultado() {
 
   
 
-  function crearJugador() {
-    const nombre = document.getElementById('nombreJugador').value;
-    const equipoId = document.getElementById('equipoJugador').value;
-    
-    fetch('/jugadores', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    },
-    body: JSON.stringify({ nombre, equipoId })
-  })
-  .then(res => res.json())
-    .then(() => {
-      alert('Jugador creado');
-      cargarJugadores();
-    });
-}
 
-function editarJugador() {
-  const jugadorId = document.getElementById('jugadorEditar').value;
-  const equipoId = document.getElementById('equipoEditarJugador').value;
-  
-  fetch(`/jugadores/${jugadorId}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    },
-    body: JSON.stringify({ equipoId })
-  })
-    .then(res => res.json())
-    .then(() => {
-      alert('Jugador actualizado');
-      cargarJugadores();
-    });
-  }
-  
-  function eliminarJugador() {
-    const jugadorId = document.getElementById('buscarJugadorEliminar').dataset.jugadorId;
-    
-  if (!jugadorId) {
-    alert('❌ Selecciona un jugador');
-    return;
-  }
-  
-  if (!confirm('¿Seguro que deseas eliminar este jugador?')) return;
-  
-  fetch(`/jugadores/${jugadorId}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    }
-  })
-  .then(res => res.json())
-  .then(data => {
-      alert('✅ Jugador eliminado');
-      
-      // limpiar
-      document.getElementById('buscarJugadorEliminar').value = '';
-      document.getElementById('buscarJugadorEliminar').dataset.jugadorId = '';
-      
-      cargarJugadoresCache(); // refrescar cache
-    });
-  }
-  
   
   let goleadores = [];
   
@@ -685,11 +475,6 @@ function mostrarInfoPartido(partido) {
   info.style.display = 'block';
 }
 
-
-// =======================
-// CARGAR PARTIDOS EN SELECT
-// =======================
-// =======================
 // CARGAR PARTIDOS EN SELECT
 // =======================
 function cargarPartidos() {
@@ -874,10 +659,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   cargarCategoriasParaResultado();
 
-  // 🔴 ELIMINAR JUGADOR
- 
-
-  // 🔴 ELIMINAR EQUIPO
  
 });
 

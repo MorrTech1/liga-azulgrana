@@ -111,32 +111,26 @@
 </section>
               
               <section id="seccionJugadores" class="seccion-admin">
-                <div class="card-admin">
-                  <div class="form-row">
-                    <h2>👤 Gestión de Jugadores</h2>
-                    
-                    <!-- Crear jugador -->
-                    <input id="nombreJugador" placeholder="Nombre del jugador">
-                    <select id="equipoJugador"></select>
-                    <button onclick="crearJugador()" class="btn-crear">Crear jugador</button>
-                    
-                    <hr>
-      
-                    <!-- Editar jugador -->
-                    <select id="jugadorEditar"></select>
-        <select id="equipoEditarJugador"></select>
-       <button onclick="editarJugador()" class="btn-editar">Cambiar equipo</button>
-      
-       <hr>
-       
-       <!-- Eliminar jugador -->
-      <input type=" text" id="buscarJugadorEliminar" placeholder="Buscar Jugador">
-      <div id="listaJugadorEliminar" class="lista-buscador"></div>
 
-       <button onclick="eliminarJugador()" class="btn-eliminar">Eliminar jugador</button>
-      </div>
-    </div>
-  </section>
+                <h2>👤 Jugadores</h2>
+
+                <div class="toolbar">
+
+                  <input 
+                    id="buscarJugador"
+                    placeholder="Buscar jugador..."
+                    oninput="filtrarJugadores()">
+
+                    <button class="btn-crear" onclick="abrirModalCrearJugador()">
+                      
+                      + Nuevo Jugador
+
+                    </button>
+                </div>
+
+                <div id="tablaJugadores"></div>
+
+              </section>
   
   <!-- CREAR PARTIDO -->
   
@@ -220,7 +214,7 @@
 <script src="shared/components/modal.js"></script>
 
 
-
+<script src="admin/views/jugadores.js"></script>
 <script src="admin/views/equipos.js"></script>
 <script src="admin/views/categorias.js"></script>
 <script src="admin.js"></script>

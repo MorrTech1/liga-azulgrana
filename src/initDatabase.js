@@ -217,6 +217,8 @@ if (existeFundador.rows.length === 0) {
 
     nombre VARCHAR(100) NOT NULL,
 
+    numero SMALLINT,
+
     equipo_id INTEGER NOT NULL,
 
     activo BOOLEAN DEFAULT TRUE,
@@ -230,6 +232,21 @@ if (existeFundador.rows.length === 0) {
         REFERENCES equipos(id)
         ON DELETE CASCADE
 ); `)
+
+try {
+
+    await pool.query(`
+        ALTER TABLE jugadores
+        ADD COLUMN IF NOT EXISTS numero SMALLINT;
+    `);
+
+    console.log("✅ Columna numero verificada.");
+
+} catch (error) {
+
+    console.error("Error agregando columna numero:", error);
+
+}
 
 
 
