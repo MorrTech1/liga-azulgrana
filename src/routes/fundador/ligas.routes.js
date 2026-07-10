@@ -414,4 +414,49 @@ router.put(
     }
 );
 
+
+router.delete(
+    '/:id',
+    verificarToken,
+    soloFundador,
+    async(req,res)=>{
+         try{
+
+            const id=Number(req.params.id);
+           const resultado=await pool.query(
+                `
+                DELETE FROM ligas
+                WHERE id=$1
+                RETURNING *;
+                `,
+                [id]
+            );
+
+            if(resultado.rows.length===0){
+
+                return res.status(404).json({
+
+                    mensaje:"Liga no encontrada."
+
+                });
+            }
+
+            res.json({
+                mensaje:"Liga eliminada.",
+                liga:resultado.rows[0]
+            });
+
+        }catch(error){
+
+            console.error(error);
+
+            res.status(500).json({
+                mensaje:"Error eliminando."
+            });
+
+        }
+    }
+
+);
+
 module.exports = router;

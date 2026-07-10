@@ -7,7 +7,10 @@
 
   <title>Panel Admin</title>
   <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="shared/shared.css">
+
   <link rel="icon" href="imagenes/liga_azulgrana-Photoroom.png">
+  
   
 </head>
 <body>
@@ -86,36 +89,26 @@
 </section>
         
         <!-- CREAR EQUIPO -->
-          <section id="seccionEquipos" class="seccion-admin">
-            <div class="card-admin">
-              <div class="form-row">
+              <section id="seccionEquipos" class="seccion-admin">
 
-                   <h2 id="crearEquipo">➕ Crear Equipo</h2>
-                   
-                   <input id="nombreEquipo" placeholder="Nombre del equipo">
-                   
-                   <select id="categoriaEquipo"></select>
+    <h2>⚽ Equipos</h2>
 
-                   <input type="file" id="logoEquipo" accept="image/*">
-                   
-                   <button onclick="crearEquipo()" class="btn-crear">Crear equipo</button>
+    <div class="toolbar">
 
-                   <hr>
-                   
-                   <section>
-                     <h2>🗑️ Eliminar Equipo</h2>
+        <input
+            id="buscarEquipo"
+            placeholder="Buscar equipo..."
+            oninput="filtrarEquipos()">
 
-                     <input id="buscarEquipoEliminar" placeholder="Buscar equipo.." type="text">
-                     <div id="listaEquipoEliminar" class="lista-buscador"></div>
+        <button onclick="abrirModalCrearEquipo()" class="btn-crear">
+    + Nuevo Equipo
+</button>
 
-                     <button onclick="eliminarEquipo()" class="btn-eliminar">Eliminar equipo</button>
-                    </section>
+    </div>
 
+    <div id="tablaEquipos"></div>
 
-                  </div>
-                  
-                </div>
-              </section>
+</section>
               
               <section id="seccionJugadores" class="seccion-admin">
                 <div class="card-admin">
@@ -228,7 +221,7 @@
 
 
 
-
+<script src="admin/views/equipos.js"></script>
 <script src="admin/views/categorias.js"></script>
 <script src="admin.js"></script>
 </body>

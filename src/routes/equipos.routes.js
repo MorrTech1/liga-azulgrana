@@ -27,18 +27,19 @@ router.get('/',verificarToken,soloAdmin, async (req, res) => {
         const ligaId = req.usuario.liga_id;
 
         const resultado = await pool.query(`
-            SELECT
-                e.id,
-                e.nombre,
-                e.escudo AS logo,
-                e.categoria_id AS "categoriaId"
-            FROM equipos e
-            INNER JOIN categorias c
-                ON e.categoria_id = c.id
-            WHERE
-                e.activo = TRUE
-                AND c.liga_id = $1
-            ORDER BY e.nombre;
+           SELECT
+    e.id,
+    e.nombre,
+    e.escudo,
+    e.categoria_id AS "categoriaId",
+    c.nombre AS categoria
+FROM equipos e
+INNER JOIN categorias c
+    ON e.categoria_id = c.id
+WHERE
+    e.activo = TRUE
+    AND c.liga_id = $1
+ORDER BY e.nombre;
         `, [ligaId]);
 
         res.json(resultado.rows);
@@ -133,6 +134,106 @@ router.post(
 
             res.status(500).json({
                 mensaje: "Error creando equipo."
+            });
+
+        }
+
+    }
+);
+
+
+router.put(
+    '/:id',
+    verificarToken,
+    soloAdmin,
+    uploadEquipo.single('logo'),
+    async (req, res) => {
+
+        try {
+
+            const id = Number(req.params.id);
+            const { nombre } = req.body;
+
+            if (!nombre) {
+                return res.status(400).json({
+                    mensaje: "El nombre es obligatorio."
+                });
+            }
+
+            const ligaId = req.usuario.liga_id;
+
+            // Verificar que el equipo pertenezca a la liga
+            const equipo = await pool.query(
+                `
+                SELECT e.id
+                FROM equipos e
+                INNER JOIN categorias c
+                    ON e.categoria_id = c.id
+                WHERE e.id = $1
+                  AND c.liga_id = $2;
+                `,
+                [id, ligaId]
+            );
+
+            if (equipo.rows.length === 0) {
+                return res.status(404).json({
+                    mensaje: "Equipo no encontrado."
+                });
+            }
+
+            let consulta;
+            let parametros;
+
+            if (req.file) {
+
+                const logo = `/uploads/equipos/${req.file.filename}`;
+
+                consulta = `
+                    UPDATE equipos
+                    SET
+                        nombre = $1,
+                        escudo = $2,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = $3
+                    RETURNING *;
+                `;
+
+                parametros = [nombre, logo, id];
+
+            } else {
+
+                consulta = `
+                    UPDATE equipos
+                    SET
+                        nombre = $1,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = $2
+                    RETURNING *;
+                `;
+
+                parametros = [nombre, id];
+
+            }
+
+            const resultado = await pool.query(
+                consulta,
+                parametros
+            );
+
+            res.json(resultado.rows[0]);
+
+        } catch (error) {
+
+            console.error(error);
+
+            if (error.code === "23505") {
+                return res.status(400).json({
+                    mensaje: "Ya existe un equipo con ese nombre."
+                });
+            }
+
+            res.status(500).json({
+                mensaje: "Error actualizando equipo."
             });
 
         }

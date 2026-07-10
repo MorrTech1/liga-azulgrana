@@ -130,6 +130,10 @@ function mostrarSeccion(nombre) {
 
     }
 
+    if(nombre === "Equipos"){
+        renderEquipos();
+}
+
     // cerrar sidebar en móvil
     const sidebar = document.getElementById('adminSidebar');
 
@@ -148,123 +152,14 @@ function toggleSidebar() {
 }
 
 
-function crearBuscador(input, lista, data, onSelect) {
-  if (!input || !lista) {
-    console.error('Input o lista no encontrados');
-    return;
-  }
-
-  input.addEventListener('input', () => {
-    const texto = input.value.toLowerCase();
-    lista.innerHTML = '';
-
-    if (!texto) return;
-
-    data
-      .filter(item => item.nombre.toLowerCase().includes(texto))
-      .forEach(item => {
-        const div = document.createElement('div');
-        div.classList.add('item-buscador');
-
-        let textoItem = item.nombre;
-
-        // 🟢 CASO 1: JUGADOR → Equipo + Categoría
-        if (item.equipoId) {
-          const equipo = equiposCache.find(e => Number(e.id) === Number(item.equipoId));
-          const categoria = categoriasCache.find(c => Number(c.id) === Number(item.categoriaId));
-
-          const nombreEquipo = equipo ? equipo.nombre : 'Equipo desconocido';
-          const nombreCategoria = categoria ? categoria.nombre : 'Sin categoría';
-
-          textoItem = `${item.nombre} — ${nombreEquipo} (${nombreCategoria})`;
-        }
-
-        // 🟢 CASO 2: EQUIPO → Categoría
-        else if (item.categoriaId) {
-          const categoria = categoriasCache.find(c => Number(c.id) === Number(item.categoriaId));
-          const nombreCategoria = categoria ? categoria.nombre : 'Sin categoría';
-
-          textoItem = `${item.nombre} (${nombreCategoria})`;
-        }
-
-        div.textContent = textoItem;
-
-        div.onclick = () => {
-          input.value = item.nombre;
-          lista.innerHTML = '';
-
-          // ID genérico
-          input.dataset.id = item.id;
-
-          if (onSelect) onSelect(item);
-        };
-
-        lista.appendChild(div);
-      });
-  });
-}
-
-
-
-
 
 // =======================
 // CREAR EQUIPO
 // =======================
 
-function crearEquipo() {
-  const nombre = document.getElementById('nombreEquipo').value;
-  const categoriaId = document.getElementById('categoriaEquipo').value;
-  const logoInput = document.getElementById('logoEquipo');
-  const logo = logoInput.files[0];
 
-  if (!nombre || !categoriaId) {
-    alert('Faltan datos');
-    return;
-  }
 
-  const formData = new FormData();
-  formData.append('nombre', nombre);
-  formData.append('categoriaId', categoriaId);
-  if (logo) formData.append('logo', logo);
 
-  fetch('/equipos', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    },
-    body: formData
-  })
-    .then(res => res.json())
-  .then(data => {
-    if (data.mensaje) throw new Error(data.mensaje);
-    alert('Equipo creado');
-    cargarEquipos();
-  })
-  .catch(err => {
-    console.error(err);
-    alert('Error creando equipo');
-  });
-}
-
-crearBuscador(
-  document.getElementById('buscarLocal'),
-  document.getElementById('listaLocal'),
-  equiposCache,
-  equipo => {
-    document.getElementById('buscarLocal').dataset.equipoId = equipo.id;
-  }
-);
-
-crearBuscador(
-  document.getElementById('buscarVisitante'),
-  document.getElementById('listaVisitante'),
-  equiposCache,
-  equipo => {
-    document.getElementById('buscarVisitante').dataset.equipoId = equipo.id;
-
-  }
-);
 
 
 // =======================
@@ -427,37 +322,6 @@ function cargarEquipos() {
     });
   }
 
-  crearBuscador(
-  document.getElementById('buscarEquipoEliminar'),
-  document.getElementById('listaEquipoEliminar'),
-  equiposCache,
-  equipo => {
-    document.getElementById('buscarEquipoEliminar').dataset.equipoId = equipo.id;
-  }
-);
-
-crearBuscador(
-  document.getElementById('buscarLocal'),
-  document.getElementById('listaLocal'),
-  equiposCache,
-  equipo => {
-    document.getElementById('buscarLocal').dataset.equipoId = equipo.id;
-  }
-);
-
-crearBuscador(
-  document.getElementById('buscarVisitante'),
-  document.getElementById('listaVisitante'),
-  equiposCache,
-  equipo => {
-    document.getElementById('buscarVisitante').dataset.equipoId = equipo.id;
-  }
-);
-
-
-
-
-
 
 function cargarJugadores() {
   fetch('/jugadores', {
@@ -501,24 +365,10 @@ function cargarJugadores() {
   });
 }
 
-  crearBuscador(
-    document.getElementById('buscarJugadorEliminar'),
-    document.getElementById('listaJugadorEliminar'),
-    jugadoresCache,
-    jugador => {
-      document.getElementById('buscarJugadorEliminar').dataset.jugadorId = jugador.id;
-    }
-);
 
 
-crearBuscador(
-  document.getElementById('buscarEquipoEliminar'),
-  document.getElementById('listaEquipoEliminar'),
-  equiposCache,
-  equipo => {
-    document.getElementById('buscarEquipoEliminar').dataset.equipoId = equipo.id;
-  }
-);
+
+
 
 
 async function cargarJornadasPorCategoria(categoriaId) {
@@ -601,57 +451,7 @@ async function cargarPartidosParaResultado() {
 
 
 
-function eliminarEquipo() {
-  const input = document.getElementById('buscarEquipoEliminar');
-  
-  if (!input) {
-    alert('❌ Input de búsqueda no encontrado');
-    return;
-  }
 
-  const equipoId = input.dataset.equipoId;
-  
-  console.log('ID EQUIPO A ELIMINAR:', equipoId);
-  
-  if (!equipoId) {
-    alert('❌ Selecciona un equipo de la lista');
-    return;
-  }
-
-  if (!confirm('¿Seguro que deseas eliminar este equipo?')) return;
-  
-  fetch(`/equipos/${equipoId}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-      'Content-Type': 'application/json'// 🔥 OBLIGATORIO
-    }
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.mensaje) {
-        alert('✅ ' + data.mensaje);
-      } else {
-        alert('✅ Equipo eliminado');
-      }
-      
-      // 🔄 limpiar input
-      input.value = '';
-      input.dataset.equipoId = '';
-      
-      // 🔄 refrescar datos
-      cargarEquipos();
-      cargarJugadoresCache();
-      
-      // 🔄 opcional: limpiar lista visual
-      const lista = document.getElementById('listaEquipoEliminar');
-      if (lista) lista.innerHTML = '';
-    })
-    .catch(err => {
-      console.error('Error eliminando equipo:', err);
-      alert('❌ Error al eliminar equipo');
-    });
-  }
 
   
   
@@ -698,9 +498,6 @@ function eliminarEquipo() {
       cargarJugadores();
     });
 }
-
-
-
 
 function editarJugador() {
   const jugadorId = document.getElementById('jugadorEditar').value;
@@ -961,9 +758,7 @@ function cargarPartidos() {
     });
   }
 
-  
-  
-  
+
   // =======================
   // REGISTRAR RESULTADO
   // =======================
@@ -1080,43 +875,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   cargarCategoriasParaResultado();
 
   // 🔴 ELIMINAR JUGADOR
-  crearBuscador(
-    document.getElementById('buscarJugadorEliminar'),
-    document.getElementById('listaJugadorEliminar'),
-    jugadoresCache,
-    jugador => {
-      document.getElementById('buscarJugadorEliminar').dataset.jugadorId = jugador.id;
-      console.log('Jugador seleccionado:', jugador);
-    }
-  );
+ 
 
   // 🔴 ELIMINAR EQUIPO
-  crearBuscador(
-    document.getElementById('buscarEquipoEliminar'),
-    document.getElementById('listaEquipoEliminar'),
-    equiposCache,
-    equipo => {
-      document.getElementById('buscarEquipoEliminar').dataset.equipoId = equipo.id;
-      console.log('Equipo seleccionado:', equipo);
-    }
-  );
-   // Equipo Local
-  crearBuscador(
-  document.getElementById('buscarLocal'),
-  document.getElementById('listaLocal'),
-  equiposCache,
-  equipo => {
-    document.getElementById('buscarLocal').dataset.equipoId = equipo.id;
-  }
-);
  
-crearBuscador(
-  document.getElementById('buscarVisitante'),
-  document.getElementById('listaVisitante'),
-  equiposCache,
-  equipo => {
-    document.getElementById('buscarVisitante').dataset.equipoId = equipo.id;
-  }
-);
 });
 
