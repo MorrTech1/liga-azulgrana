@@ -15,13 +15,13 @@ async function renderCategorias() {
 
                  
 
-<button
-    class="btn-icon btn-eliminar"
-    onclick="confirmarEliminarCategoria(${c.id})">
+          <button
+            class="btn-icon btn-eliminar"
+            onclick="confirmarEliminarCategoria(${c.id})">
 
-    🗑️
+              <i class="fa-solid fa-trash"></i>
 
-</button>
+         </button>
 
             </td>
 

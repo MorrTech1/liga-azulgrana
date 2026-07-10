@@ -42,7 +42,7 @@ function renderJugadores(lista = jugadoresCache){
                         class="btn-icon btn-editar"
                         onclick="abrirModalEditarJugador(${j.id})">
 
-                        ✏️
+                        <i class="fa-solid fa-pen"></i>
 
                     </button>
 
@@ -50,7 +50,7 @@ function renderJugadores(lista = jugadoresCache){
                         class="btn-icon btn-eliminar"
                         onclick="confirmarEliminarJugador(${j.id})">
 
-                        🗑️
+                        <i class="fa-solid fa-trash"></i>
 
                     </button>
 

@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="shared/shared.css">
 
   <link rel="icon" href="imagenes/liga_azulgrana-Photoroom.png">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   
   
 </head>
@@ -38,6 +40,7 @@
             <button onclick="mostrarSeccion('Categorias')">CATEGORIAS</button>
             <button onclick="mostrarSeccion('Equipos')">EQUIPOS</button>
             <button onclick="mostrarSeccion('Jugadores')">JUGADORES</button>
+            <button onclick="mostrarSeccion('Competencias')">COMPETENCIAS</button>
             <button onclick="mostrarSeccion('Partidos')">PARTIDOS</button>
           </nav>
         </div>
@@ -134,75 +137,25 @@
   
   <!-- CREAR PARTIDO -->
   
-  <section id="seccionPartidos" class="seccion-admin">
-    <div class="card-admin">
-      <div class="form-row">
-        <section>
+        <section id="seccionCompetencias" class="seccion-admin">
+          <h2> 🏆 Competencia </h2>
 
-          <h2 id="partidos">⚽ Crear Partido</h2>
-          <p>Selecionar equipos</p>
-          
-          <input id="buscarLocal" placeholder="Equipo Local" type="text">
-          <div class="lista-buscador" id="listaLocal"></div>
-          
-          <input id="buscarVisitante" placeholder="Equipo Visitante" type="text">
-          <div class="lista-buscador" id="listaVisitante"></div>
-          
-          <p>Seleccionar categoria</p>
-          
-          <select id="categoriaPartido"></select>
-          
-          <p>Seleccionar fecha</p>
-          
-          <input id="fecha" type="date">
-          <input id="hora" type="time">
-          <input type="number" id="jornadaPartido" placeholder="Jornada" min="1">
-          
-          <button onclick="crearPartido()" class="btn-crear">Crear partido</button>
+          <div class="toolbar">
+            <input 
+            id="buscarFase"
+            placeholder="Buscar fase..."
+            oninput="filtrarFases()">
+
+            <button 
+            class="btn-crear"
+            onclick="abrirModalCrearFase()">
+              + Nueva fase
+          </button>
+          </div>
+
+          <div id="tablaFases"></div>
+
         </section>
-        
-        <section>
-          <h2>Seleccionar Partido</h2>
-
-            <h3>Categoría</h3>
-            <select id="categoriaResultado"></select>
-
-           <h3>Jornada</h3>
-          <select id="jornadaResultado" disabled></select>
-
-             <h3>Partido</h3>
-          <select id="partidoId" disabled></select>
-
-             <div id="infoPartido" class="info-partido" >
-               <p id="infoFecha"></p>
-               <p id="infoHora"></p>
-             </div>
-         
-            </section>
-      
-      
-        <!-- REGISTRAR RESULTADO -->
-         <section>
-          <h2>Registrar resultado</h2>
-          <input type="number" id="golesLocal" placeholder="Goles local">
-          <input type="number" id="golesVisitante" placeholder="Goles visitante">
-        
-          <div id="goleadoresContainer"></div>
-          <button onclick="agregarGoleador()" class="btn-crear">➕ Agregar goleador</button>
-        
-          <button onclick="registrarResultado()" class="btn-crear">Registrar resultado</button>
-        
-         </section>
-      <!-- ELIMINAR EQUIPO O PARTIDO -->
-      
-         <section>
-           <h2>🗑️ Eliminar Partido</h2>   
-           
-           <button onclick="eliminarPartido()" class="btn-eliminar">Eliminar partido</button>
-         </section>
-      </div>  
-    </div>
-  </section> 
 
    </main>
 </div>
@@ -213,7 +166,7 @@
 <script src="shared/components/toast.js"></script>
 <script src="shared/components/modal.js"></script>
 
-
+<script src="admin/views/fases.js"></script>
 <script src="admin/views/jugadores.js"></script>
 <script src="admin/views/equipos.js"></script>
 <script src="admin/views/categorias.js"></script>

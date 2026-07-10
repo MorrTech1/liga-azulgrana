@@ -177,6 +177,31 @@ if (existeFundador.rows.length === 0) {
 );
         `);
 
+        await pool.query(`
+    CREATE TABLE IF NOT EXISTS fases (
+
+        id SERIAL PRIMARY KEY,
+
+        nombre VARCHAR(100) NOT NULL,
+
+        categoria_id INTEGER NOT NULL,
+
+        orden INTEGER DEFAULT 1,
+
+        activa BOOLEAN DEFAULT TRUE,
+
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+        CONSTRAINT fk_fase_categoria
+            FOREIGN KEY (categoria_id)
+            REFERENCES categorias(id)
+            ON DELETE CASCADE
+
+    );
+`);
+
         // =====================================
         // TABLA EQUIPOS
         // =====================================
@@ -247,8 +272,6 @@ try {
     console.error("Error agregando columna numero:", error);
 
 }
-
-
 
       // =====================================
       // TABLA PARTIDOS

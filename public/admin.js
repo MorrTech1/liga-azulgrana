@@ -94,6 +94,8 @@ function mostrarPanelAdmin() {
   cargarCategoriasCache();
   cargarEquiposCache();
   cargarJugadoresCache();
+
+  
 }
 function obtenerNombreEquipo(equipoId) {
   const equipo = equiposCache.find(e => Number(e.id) === Number(equipoId));
@@ -133,6 +135,9 @@ function mostrarSeccion(nombre) {
     if(nombre === "Equipos"){
         renderEquipos();
 }
+    if(nombre === "Competencias"){
+      cargarFasesCache();
+    }
 
     // cerrar sidebar en móvil
     const sidebar = document.getElementById('adminSidebar');
@@ -380,63 +385,6 @@ function cargarJugadoresEnSelect(select) {
 
 
 
-document.getElementById('categoriaResultado').addEventListener('change', e => {
-  categoriaResultadoActual = Number(e.target.value) || null;
-
-  // 🔴 LIMPIEZAS IMPORTANTES
-  jornadaResultadoActual = null;
-  partidoSeleccionado = null;
-
-  // limpiar jornadas
-  const jornadaSelect = document.getElementById('jornadaResultado');
-  jornadaSelect.innerHTML = '<option value="">-- Selecciona jornada --</option>';
-  jornadaSelect.disabled = true;
-
-  // limpiar partidos
-  const partidoSelect = document.getElementById('partidoId');
-  partidoSelect.innerHTML = '<option value="">-- Selecciona partido --</option>';
-  partidoSelect.disabled = true;
-
-  // ocultar info
-  document.getElementById('infoPartido').style.display = 'none';
-
-  if (!categoriaResultadoActual) return;
-
-  // 🔵 cargar jornadas
-  cargarJornadasPorCategoria(categoriaResultadoActual);
-});
-
-
-document.getElementById('jornadaResultado').addEventListener('change', e => {
-  jornadaResultadoActual = Number(e.target.value) || null;
-
-  // limpiar partido seleccionado
-  partidoSeleccionado = null;
-
-  const partidoSelect = document.getElementById('partidoId');
-  partidoSelect.innerHTML = '<option value="">-- Selecciona partido --</option>';
-  partidoSelect.disabled = true;
-
-  document.getElementById('infoPartido').style.display = 'none';
-
-  if (!jornadaResultadoActual) return;
-
-  // 🔵 cargar partidos
-  cargarPartidosParaResultado();
-});
-
-document.getElementById('partidoId').addEventListener('change', e => {
-  const partidoId = Number(e.target.value);
-
-  partidoSeleccionado = partidosResultadoCache.find(p => p.id === partidoId) || null;
-
-  if (!partidoSeleccionado) {
-    document.getElementById('infoPartido').style.display = 'none';
-    return;
-  }
-
-  mostrarInfoPartido(partidoSeleccionado);
-});
 
 
 function mostrarInfoPartido(partido) {

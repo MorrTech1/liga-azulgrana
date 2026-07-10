@@ -143,6 +143,16 @@ input, select {
   transition: 0.2s;
 }
 
+.btn-secundario {
+  background: #2563eb;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+  
 
 
 
@@ -563,7 +573,7 @@ button{
   .menu-btn {
     background: none;
     border: none;
-    font-size: 22px;
+    font-size: 50px;
     color: white;
     cursor: pointer;
   }

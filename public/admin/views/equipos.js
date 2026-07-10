@@ -33,7 +33,7 @@ function renderEquipos(lista = equiposCache) {
     class="btn-icon btn-editar"
     onclick="abrirModalEditarEquipo(${e.id})">
 
-    ✏️
+    <i class="fa-solid fa-pen"></i>
 
 </button>
 
@@ -41,7 +41,7 @@ function renderEquipos(lista = equiposCache) {
     class="btn-icon btn-eliminar"
     onclick="confirmarEliminarEquipo(${e.id})">
 
-    🗑️
+    <i class="fa-solid fa-trash"></i>
 
 </button>
 
