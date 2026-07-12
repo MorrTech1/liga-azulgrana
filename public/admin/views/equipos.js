@@ -1,7 +1,16 @@
 let equipoEditando = null;
+let equiposCache = null;
 
 
-function renderEquipos(lista = equiposCache) {
+async function renderEquipos(lista = null) {
+
+    if (!lista) {
+
+        await cargarEquiposCache();
+
+        lista = equiposCache;
+
+    }
 
     const contenedor = document.getElementById("tablaEquipos");
 
@@ -85,6 +94,26 @@ function renderEquipos(lista = equiposCache) {
 
 }
 
+
+async function cargarEquiposCache() {
+
+    const res = await fetch('/equipos', {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        console.error(data);
+        equiposCache = [];
+        return;
+    }
+
+    equiposCache = data;
+
+}
  
 
 function cargarEquipos() {

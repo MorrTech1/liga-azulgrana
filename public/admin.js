@@ -1,5 +1,4 @@
 let jugadoresCache = [];
-let equiposCache = [];
 let categoriasCache = [];
 let partidosResultadoCache = [];
 let partidoSeleccionado = null;
@@ -599,7 +598,7 @@ function editarPartido() {
   
   window.onload = () => {
     if (token) {
-      cargarEquipos();
+    renderEquipos();
     cargarJugadores();
     cargarPartidos();
     cargarCategorias();
