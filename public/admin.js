@@ -93,7 +93,7 @@ async function mostrarPanelAdmin() {
 
     await renderCategorias();
 
-    cargarEquipos();
+    renderEquipos();
     cargarPartidos();
     cargarJugadores();
 

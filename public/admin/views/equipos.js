@@ -88,38 +88,43 @@ function renderEquipos(lista = equiposCache) {
  
 
 function cargarEquipos() {
+
   fetch('/equipos', {
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
   })
     .then(res => res.json())
     .then(equipos => {
+
+      // ===== mapa de equipos =====
       mapaEquipos = {};
+
       equipos.forEach(e => {
         mapaEquipos[e.id] = e;
       });
 
-      // ===== selects existentes =====
+      // ===== selects =====
       const selectLocal = document.getElementById('equipoLocal');
       const selectVisitante = document.getElementById('equipoVisitante');
-      const selectEliminarEquipo = document.getElementById('equipoEliminar');
-
-      // ===== nuevos selects (jugadores) =====
       const selectEquipoJugador = document.getElementById('equipoJugador');
       const selectEquipoEditarJugador = document.getElementById('equipoEditarJugador');
-      
-      // limpiar todos si existend
+
+      // ===== limpiar selects =====
       [
         selectLocal,
         selectVisitante,
-        selectEliminarEquipo,
         selectEquipoJugador,
         selectEquipoEditarJugador
-      ].forEach(s => {
-        if (s) s.innerHTML = '';
+      ].forEach(select => {
+        if (select) {
+          select.innerHTML = '';
+        }
       });
 
+      // ===== llenar selects =====
       equipos.forEach(e => {
-        // crear partido
+
         if (selectLocal) {
           const opt = document.createElement('option');
           opt.value = e.id;
@@ -134,31 +139,30 @@ function cargarEquipos() {
           selectVisitante.appendChild(opt);
         }
 
-        // eliminar equipo
-        
-
-        // crear jugador
         if (selectEquipoJugador) {
           const opt = document.createElement('option');
           opt.value = e.id;
           opt.textContent = e.nombre;
           selectEquipoJugador.appendChild(opt);
         }
-        
-        // editar jugador
+
         if (selectEquipoEditarJugador) {
           const opt = document.createElement('option');
           opt.value = e.id;
           opt.textContent = e.nombre;
           selectEquipoEditarJugador.appendChild(opt);
         }
+
       });
 
-      console.log('✅ Equipos cargados en TODOS los selects');
+      console.log('✅ Equipos cargados en todos los selects');
+
+    })
+    .catch(err => {
+      console.error('Error cargando equipos:', err);
     });
 
-    renderEquipos();
-  }
+}
 
 function filtrarEquipos(){
 
