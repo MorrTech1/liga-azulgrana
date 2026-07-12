@@ -109,15 +109,22 @@ function guardarCategoria(){
 
 
 async function cargarCategoriasCache() {
-  const res = await fetch('/categorias', {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
+
+    const res = await fetch('/categorias', {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        console.error(data);
+        categoriasCache = [];
+        return;
     }
-  });
 
-  categoriasCache = await res.json();
-
-  renderCategorias();
+    categoriasCache = data;
 }
 
 async function cargarCategoriasParaResultado() {

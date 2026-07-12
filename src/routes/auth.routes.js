@@ -51,6 +51,12 @@ router.post('/login', async (req, res) => {
         
         const usuario = resultado.rows[0];
 
+        if (!usuario) {
+    return res.status(401).json({
+        mensaje: 'Credenciales inválidas'
+    });
+}
+
         // Más adelante aquí usaremos bcrypt
         if (usuario.password !== password) {
             return res.status(401).json({

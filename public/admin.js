@@ -12,11 +12,14 @@ if (tokenGuardado) {
 
 // =======================
 // LOGIN
-// =======================
+// ============
+
 function login() {
 
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
+
+    console.log("Iniciando login...");
 
     fetch('/auth/login', {
 
@@ -33,16 +36,16 @@ function login() {
 
     })
 
-    .then(res => res.json())
+    .then(async res => {
 
-    .then(data => {
+        console.log("Status:", res.status);
 
-        if (!data.token) {
+        const data = await res.json();
 
-            alert(data.mensaje || "Error iniciando sesión.");
+        console.log("Respuesta:", data);
 
-            return;
-
+        if (!res.ok) {
+            throw new Error(data.mensaje || "Error iniciando sesión.");
         }
 
         localStorage.setItem('token', data.token);
@@ -63,7 +66,7 @@ function login() {
 
         console.error(error);
 
-        alert("No fue posible conectar con el servidor.");
+        alert(error.message);
 
     });
 
@@ -83,20 +86,23 @@ function mostrarLogin() {
 
 
 
-function mostrarPanelAdmin() {
-  document.getElementById('loginContainer').style.display = 'none';
-  document.getElementById('adminLayout').style.display = 'flex';
-  
-  cargarEquipos();
-  cargarPartidos();
-  cargarJugadores();
-  cargarCategorias();
-  cargarCategoriasCache();
-  cargarEquiposCache();
-  cargarJugadoresCache();
+async function mostrarPanelAdmin() {
 
-  
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('adminLayout').style.display = 'flex';
+
+    await renderCategorias();
+
+    cargarEquipos();
+    cargarPartidos();
+    cargarJugadores();
+
+    cargarEquiposCache();
+    cargarJugadoresCache();
+
 }
+
+
 function obtenerNombreEquipo(equipoId) {
   const equipo = equiposCache.find(e => Number(e.id) === Number(equipoId));
   return equipo ? equipo.nombre : 'Equipo desconocido';

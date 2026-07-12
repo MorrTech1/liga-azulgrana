@@ -14,7 +14,7 @@ function renderJugadores(lista = jugadoresCache){
         contenedor.innerHTML = `
             <div class="empty-state">
                 <h3>👤 No hay jugadores</h3>
-                <p>Crea tu primer jugador para comenzar.</p>
+                <p style="color: #666;">Crea tu primer jugador para comenzar.</p>
             </div>
         `;
 
@@ -22,7 +22,7 @@ function renderJugadores(lista = jugadoresCache){
 
     }
 
-    const filas = lista.map(j => `
+    const filas = lista.map (j => `
 
         <tr>
                 
